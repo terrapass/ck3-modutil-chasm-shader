@@ -247,7 +247,7 @@ VertexShader =
 				float4 DetailMaterial;
 				WoKCalculateDetailsLowSpec( Vertex.WorldSpacePos.xz, DetailDiffuse, DetailMaterial );
 
-				Vertex.WorldSpacePos.y -= 75.0*DetailMaterial.r;
+				Vertex.WorldSpacePos.y -= 1000.0*DetailMaterial.r;
 			#endif
 			// END MOD
 
@@ -568,6 +568,20 @@ PixelShader =
 				SLightingProperties LightingProps = GetSunLightingProperties( Input.WorldSpacePos, ShadowTerm );
 
 				float3 FinalColor = CalculateSunLighting( MaterialProps, LightingProps, EnvironmentMap );
+
+				// MOD(shattered-plains)
+				float ChasmValue      = DetailMaterial.r;
+				float MagentaStrength = FinalColor.r*FinalColor.b*(1.0 - FinalColor.g);
+
+				// Turn magenta into grayscale in proportion to chasm value and magenta strength
+				FinalColor.r = lerp(FinalColor.r, FinalColor.g, max(ChasmValue, MagentaStrength));
+				FinalColor.b = lerp(FinalColor.b, FinalColor.g, max(ChasmValue, MagentaStrength));
+
+				// FIXME: Brush edges still remain magenta :(
+
+				// Fade to black as depth increases
+				FinalColor *= 1.0 - smoothstep(0.0, 15.0, -Input.WorldSpacePos.y);
+				// END MOD
 
 				#ifndef UNDERWATER
 					FinalColor = ApplyFogOfWar( FinalColor, Input.WorldSpacePos, FogOfWarAlpha );
