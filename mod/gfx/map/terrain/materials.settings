@@ -463,6 +463,14 @@
 		mask=		"wok_chasm_01_mask.png"
 		id =		"wok_chasm_01"
 	}
+	{
+		name=		"WoK Chasm - Desert wavy 01"
+		diffuse=	"wok_chasm_02_diffuse.dds"
+		normal=		"wok_chasm_02_normal.dds"
+		material=	"wok_chasm_02_properties.dds"
+		mask=		"wok_chasm_02_mask.png"
+		id =		"wok_chasm_02"
+	}
 
 }
 # unmasked textures
