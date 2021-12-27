@@ -109,120 +109,120 @@ VertexShader =
 		#ifdef PDX_DIRECTX_11
 		#define WoKTex2D(samp,coords) (samp)._Texture[ coords ]
 		#else // OpenGL
-		#define WoKTex2D(samp,coords) 
+		//#define WoKTex2D(samp,coords) // TODO
 		#endif
 
-		void WoKGetChasmAmount( float2 WorldSpacePosXZ, out float ChasmAmount )
-		{
-			float2 DetailCoordinates = WorldSpacePosXZ * WorldSpaceToDetail;
-			float2 DetailCoordinatesScaled = DetailCoordinates * DetailTextureSize;
-			float2 DetailCoordinatesScaledFloored = floor( DetailCoordinatesScaled );
-			float2 DetailCoordinatesFrac = DetailCoordinatesScaled - DetailCoordinatesScaledFloored;
-			//DetailCoordinates = DetailCoordinatesScaledFloored * DetailTexelSize + DetailTexelSize * 0.5;
+		// void WoKGetChasmAmount( float2 WorldSpacePosXZ, out float ChasmAmount )
+		// {
+		// 	float2 DetailCoordinates = WorldSpacePosXZ * WorldSpaceToDetail;
+		// 	float2 DetailCoordinatesScaled = DetailCoordinates * DetailTextureSize;
+		// 	float2 DetailCoordinatesScaledFloored = floor( DetailCoordinatesScaled );
+		// 	float2 DetailCoordinatesFrac = DetailCoordinatesScaled - DetailCoordinatesScaledFloored;
+		// 	//DetailCoordinates = DetailCoordinatesScaledFloored * DetailTexelSize + DetailTexelSize * 0.5;
 			
-			float4 Factors = float4(
-				(1.0 - DetailCoordinatesFrac.x) * (1.0 - DetailCoordinatesFrac.y),
-				DetailCoordinatesFrac.x * (1.0 - DetailCoordinatesFrac.y),
-				(1.0 - DetailCoordinatesFrac.x) * DetailCoordinatesFrac.y,
-				DetailCoordinatesFrac.x * DetailCoordinatesFrac.y
-			);
+		// 	float4 Factors = float4(
+		// 		(1.0 - DetailCoordinatesFrac.x) * (1.0 - DetailCoordinatesFrac.y),
+		// 		DetailCoordinatesFrac.x * (1.0 - DetailCoordinatesFrac.y),
+		// 		(1.0 - DetailCoordinatesFrac.x) * DetailCoordinatesFrac.y,
+		// 		DetailCoordinatesFrac.x * DetailCoordinatesFrac.y
+		// 	);
 
-			uint2 DetailCoordinatesInt = uint2(DetailCoordinatesScaledFloored);
+		// 	uint2 DetailCoordinatesInt = uint2(DetailCoordinatesScaledFloored);
 
-			float4 DetailIndex = WoKTex2D( DetailIndexTexture, DetailCoordinatesInt ) * 255.0;
-			float4 DetailMask = WoKTex2D( DetailMaskTexture, DetailCoordinatesInt ) * Factors[0];
+		// 	float4 DetailIndex = WoKTex2D( DetailIndexTexture, DetailCoordinatesInt ) * 255.0;
+		// 	float4 DetailMask = WoKTex2D( DetailMaskTexture, DetailCoordinatesInt ) * Factors[0];
 
-			// TODO
-			ChasmAmount = 0.0; // Also return instead of out maybe?
-		}
+		// 	// TODO
+		// 	ChasmAmount = 0.0; // Also return instead of out maybe?
+		// }
 
-		// FIXME: These definitions duplicate a later definition in this file.
-		// TODO:  Deduplicate and extract into a *.fxh file.
-		// A low spec vertex buffer version of CalculateDetails
+		// // FIXME: These definitions duplicate a later definition in this file.
+		// // TODO:  Deduplicate and extract into a *.fxh file.
+		// // A low spec vertex buffer version of CalculateDetails
 
-		float4 WoKCalcHeightBlendFactors( float4 MaterialHeights, float4 MaterialFactors, float BlendRange )
-		{
-			float4 Mat = MaterialHeights + MaterialFactors;
-			float BlendStart = max( max( Mat.x, Mat.y ), max( Mat.z, Mat.w ) ) - BlendRange;
+		// float4 WoKCalcHeightBlendFactors( float4 MaterialHeights, float4 MaterialFactors, float BlendRange )
+		// {
+		// 	float4 Mat = MaterialHeights + MaterialFactors;
+		// 	float BlendStart = max( max( Mat.x, Mat.y ), max( Mat.z, Mat.w ) ) - BlendRange;
 			
-			float4 MatBlend = max( Mat - vec4( BlendStart ), vec4( 0.0 ) );
+		// 	float4 MatBlend = max( Mat - vec4( BlendStart ), vec4( 0.0 ) );
 			
-			float Epsilon = 0.00001;
-			return float4( MatBlend ) / ( dot( MatBlend, vec4( 1.0 ) ) + Epsilon );
-		}
+		// 	float Epsilon = 0.00001;
+		// 	return float4( MatBlend ) / ( dot( MatBlend, vec4( 1.0 ) ) + Epsilon );
+		// }
 
-		void WoKCalculateDetailsLowSpec( float2 WorldSpacePosXZ, out float3 DetailDiffuse, out float4 DetailMaterial )
-		{
-			float2 DetailCoordinates = WorldSpacePosXZ * WorldSpaceToDetail;
-			float2 DetailCoordinatesScaled = DetailCoordinates * DetailTextureSize;
-			float2 DetailCoordinatesScaledFloored = floor( DetailCoordinatesScaled );
-			float2 DetailCoordinatesFrac = DetailCoordinatesScaled - DetailCoordinatesScaledFloored;
-			DetailCoordinates = DetailCoordinatesScaledFloored * DetailTexelSize + DetailTexelSize * 0.5;
+		// void WoKCalculateDetailsLowSpec( float2 WorldSpacePosXZ, out float3 DetailDiffuse, out float4 DetailMaterial )
+		// {
+		// 	float2 DetailCoordinates = WorldSpacePosXZ * WorldSpaceToDetail;
+		// 	float2 DetailCoordinatesScaled = DetailCoordinates * DetailTextureSize;
+		// 	float2 DetailCoordinatesScaledFloored = floor( DetailCoordinatesScaled );
+		// 	float2 DetailCoordinatesFrac = DetailCoordinatesScaled - DetailCoordinatesScaledFloored;
+		// 	DetailCoordinates = DetailCoordinatesScaledFloored * DetailTexelSize + DetailTexelSize * 0.5;
 			
-			float4 Factors = float4(
-				(1.0 - DetailCoordinatesFrac.x) * (1.0 - DetailCoordinatesFrac.y),
-				DetailCoordinatesFrac.x * (1.0 - DetailCoordinatesFrac.y),
-				(1.0 - DetailCoordinatesFrac.x) * DetailCoordinatesFrac.y,
-				DetailCoordinatesFrac.x * DetailCoordinatesFrac.y
-			);
+		// 	float4 Factors = float4(
+		// 		(1.0 - DetailCoordinatesFrac.x) * (1.0 - DetailCoordinatesFrac.y),
+		// 		DetailCoordinatesFrac.x * (1.0 - DetailCoordinatesFrac.y),
+		// 		(1.0 - DetailCoordinatesFrac.x) * DetailCoordinatesFrac.y,
+		// 		DetailCoordinatesFrac.x * DetailCoordinatesFrac.y
+		// 	);
 			
-			float4 DetailIndex = PdxTex2DLod0( DetailIndexTexture, DetailCoordinates ) * 255.0;
-			float4 DetailMask = PdxTex2DLod0( DetailMaskTexture, DetailCoordinates ) * Factors[0];
+		// 	float4 DetailIndex = PdxTex2DLod0( DetailIndexTexture, DetailCoordinates ) * 255.0;
+		// 	float4 DetailMask = PdxTex2DLod0( DetailMaskTexture, DetailCoordinates ) * Factors[0];
 			
-			float2 Offsets[3];
-			Offsets[0] = float2( DetailTexelSize.x, 0.0 );
-			Offsets[1] = float2( 0.0, DetailTexelSize.y );
-			Offsets[2] = float2( DetailTexelSize.x, DetailTexelSize.y );
+		// 	float2 Offsets[3];
+		// 	Offsets[0] = float2( DetailTexelSize.x, 0.0 );
+		// 	Offsets[1] = float2( 0.0, DetailTexelSize.y );
+		// 	Offsets[2] = float2( DetailTexelSize.x, DetailTexelSize.y );
 			
-			for ( int k = 0; k < 3; ++k )
-			{
-				float2 DetailCoordinates2 = DetailCoordinates + Offsets[k];
+		// 	for ( int k = 0; k < 3; ++k )
+		// 	{
+		// 		float2 DetailCoordinates2 = DetailCoordinates + Offsets[k];
 				
-				float4 DetailIndices = PdxTex2DLod( DetailIndexTexture, DetailCoordinates2, 4 ) * 255.0;
-				float4 DetailMasks = PdxTex2DLod( DetailMaskTexture, DetailCoordinates2, 4 ) * Factors[k+1];
+		// 		float4 DetailIndices = PdxTex2DLod( DetailIndexTexture, DetailCoordinates2, 4 ) * 255.0;
+		// 		float4 DetailMasks = PdxTex2DLod( DetailMaskTexture, DetailCoordinates2, 4 ) * Factors[k+1];
 				
-				for ( int i = 0; i < 4; ++i )
-				{
-					for ( int j = 0; j < 4; ++j )
-					{
-						if ( DetailIndex[j] == DetailIndices[i] )
-						{
-							DetailMask[j] += DetailMasks[i];
-						}
-					}
-				}
-			}
+		// 		for ( int i = 0; i < 4; ++i )
+		// 		{
+		// 			for ( int j = 0; j < 4; ++j )
+		// 			{
+		// 				if ( DetailIndex[j] == DetailIndices[i] )
+		// 				{
+		// 					DetailMask[j] += DetailMasks[i];
+		// 				}
+		// 			}
+		// 		}
+		// 	}
 
-			float2 DetailUV = WorldSpacePosXZ * DetailTileFactor; 
+		// 	float2 DetailUV = WorldSpacePosXZ * DetailTileFactor; 
 			
-			float4 DiffuseTexture0 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[0] ) ) * smoothstep( 0.0, 0.1, DetailMask[0] );
-			float4 DiffuseTexture1 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[1] ) ) * smoothstep( 0.0, 0.1, DetailMask[1] );
-			float4 DiffuseTexture2 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[2] ) ) * smoothstep( 0.0, 0.1, DetailMask[2] );
-			float4 DiffuseTexture3 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[3] ) ) * smoothstep( 0.0, 0.1, DetailMask[3] );
+		// 	float4 DiffuseTexture0 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[0] ) ) * smoothstep( 0.0, 0.1, DetailMask[0] );
+		// 	float4 DiffuseTexture1 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[1] ) ) * smoothstep( 0.0, 0.1, DetailMask[1] );
+		// 	float4 DiffuseTexture2 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[2] ) ) * smoothstep( 0.0, 0.1, DetailMask[2] );
+		// 	float4 DiffuseTexture3 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[3] ) ) * smoothstep( 0.0, 0.1, DetailMask[3] );
 			
-			float4 BlendFactors = WoKCalcHeightBlendFactors( float4( DiffuseTexture0.a, DiffuseTexture1.a, DiffuseTexture2.a, DiffuseTexture3.a ), DetailMask, DetailBlendRange );
-			//BlendFactors = DetailMask;
+		// 	float4 BlendFactors = WoKCalcHeightBlendFactors( float4( DiffuseTexture0.a, DiffuseTexture1.a, DiffuseTexture2.a, DiffuseTexture3.a ), DetailMask, DetailBlendRange );
+		// 	//BlendFactors = DetailMask;
 			
-			DetailDiffuse = DiffuseTexture0.rgb * BlendFactors.x + 
-							DiffuseTexture1.rgb * BlendFactors.y + 
-							DiffuseTexture2.rgb * BlendFactors.z + 
-							DiffuseTexture3.rgb * BlendFactors.w;
+		// 	DetailDiffuse = DiffuseTexture0.rgb * BlendFactors.x + 
+		// 					DiffuseTexture1.rgb * BlendFactors.y + 
+		// 					DiffuseTexture2.rgb * BlendFactors.z + 
+		// 					DiffuseTexture3.rgb * BlendFactors.w;
 			
-			DetailMaterial = vec4( 0.0 );
+		// 	DetailMaterial = vec4( 0.0 );
 			
-			for ( int i = 0; i < 4; ++i )
-			{
-				float BlendFactor = BlendFactors[i];
-				if ( BlendFactor > 0.0 )
-				{
-					float3 ArrayUV = float3( DetailUV, DetailIndex[i] );
-					float4 NormalTexture = PdxTex2DLod0( NormalTextures, ArrayUV );
-					float4 MaterialTexture = PdxTex2DLod0( MaterialTextures, ArrayUV );
+		// 	for ( int i = 0; i < 4; ++i )
+		// 	{
+		// 		float BlendFactor = BlendFactors[i];
+		// 		if ( BlendFactor > 0.0 )
+		// 		{
+		// 			float3 ArrayUV = float3( DetailUV, DetailIndex[i] );
+		// 			float4 NormalTexture = PdxTex2DLod0( NormalTextures, ArrayUV );
+		// 			float4 MaterialTexture = PdxTex2DLod0( MaterialTextures, ArrayUV );
 
-					DetailMaterial += MaterialTexture * BlendFactor;
-				}
-			}
-		}
+		// 			DetailMaterial += MaterialTexture * BlendFactor;
+		// 		}
+		// 	}
+		// }
 		// END MOD
 
 		VS_OUTPUT_PDX_TERRAIN TerrainVertex( float2 WithinNodePos, float2 NodeOffset, float NodeScale, float2 LodDirection, float LodLerpFactor )
@@ -237,18 +237,18 @@ VertexShader =
 			#endif
 
 			// MOD(shattered-plains)
-			#ifndef TERRAIN_FLAT_MAP
-				// Option 1: Custom sampling
-				float ChasmAmount;
-				WoKGetChasmAmount(Vertex.WorldSpacePos.xz, ChasmAmount);
+			// #ifndef TERRAIN_FLAT_MAP
+			// 	// Option 1: Custom sampling
+			// 	float ChasmAmount;
+			// 	WoKGetChasmAmount(Vertex.WorldSpacePos.xz, ChasmAmount);
 
-				// Option 2: Abuse low-spec logic
-				float3 DetailDiffuse;
-				float4 DetailMaterial;
-				WoKCalculateDetailsLowSpec( Vertex.WorldSpacePos.xz, DetailDiffuse, DetailMaterial );
+			// 	// Option 2: Abuse low-spec logic
+			// 	float3 DetailDiffuse;
+			// 	float4 DetailMaterial;
+			// 	WoKCalculateDetailsLowSpec( Vertex.WorldSpacePos.xz, DetailDiffuse, DetailMaterial );
 
-				Vertex.WorldSpacePos.y -= 1000.0*DetailMaterial.r;
-			#endif
+			// 	Vertex.WorldSpacePos.y -= 1000.0*DetailMaterial.r;
+			// #endif
 			// END MOD
 
 			VS_OUTPUT_PDX_TERRAIN Out;
