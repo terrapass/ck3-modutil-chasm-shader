@@ -596,22 +596,26 @@ PixelShader =
 				// Fade to black as "depth" increases
 				//
 
-				static const float CHASM_VALUE_EPSIILON = 0.01;
-				static const float CHASM_FAKE_DEPTH     = 16.0;
-				static const float CHASM_SAMPLE_STEP    = 0.5;
+				static const float CHASM_VALUE_EPSIILON = 0.001;
+				static const float CHASM_MAX_FAKE_DEPTH = 8.0;
+				static const float CHASM_SAMPLE_RANGE   = 8.0;
+				static const float CHASM_SAMPLE_STEP    = 0.25;
 
 				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
 				{
 					const float3 FromCamera       = WorldSpacePos - CameraPosition;
 					const float3 FromCameraNorm   = normalize(FromCamera);
-					const float3 FromCameraXZProj = float3(FromCamera.x, 0.0, FromCamera.z);
-					const float  CameraAngleCos   = dot(FromCameraNorm, normalize(FromCameraXZProj));
+					const float3 FromCameraXZ     = float3(FromCamera.x, 0.0, FromCamera.z);
+					const float3 FromCameraXZNorm = normalize(FromCameraXZ);
+					const float  CameraAngleSin   = length(cross(FromCameraNorm, FromCameraXZNorm));
+					const float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
+					const float  CameraAngleTan   = CameraAngleSin/CameraAngleCos;
 
 					const float2 SampleDistanceUnit = normalize(FromCamera.xz);
 
-					float SurfaceDistanceToBrink = CHASM_FAKE_DEPTH;
+					float SurfaceDistanceToBrink = CHASM_SAMPLE_RANGE;
 
-					for (float SampleDistance = 0.0; SampleDistance < CHASM_FAKE_DEPTH; SampleDistance += CHASM_SAMPLE_STEP)
+					for (float SampleDistance = 0.0; SampleDistance < CHASM_SAMPLE_RANGE; SampleDistance += CHASM_SAMPLE_STEP)
 					{
 						const float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
 						const float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
@@ -623,16 +627,21 @@ PixelShader =
 						}
 					}
 
-					const float FakeDepth = SurfaceDistanceToBrink / CameraAngleCos;
+					const float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
+					//const float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
 
 					//static const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
 
 					static const float BASE_COLOR_MULTIPLIER = 0.8;
 
-					const float DistanceValue        = 1.0 - saturate(FakeDepth / CHASM_FAKE_DEPTH);
-					const float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DistanceValue;
+					const float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
+					//const float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
+					const float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
 
+					//FinalColor = (FakeDepth / CHASM_MAX_FAKE_DEPTH)*(1.0, 1.0, 1.0);
 					FinalColor *= ChasmColorMultiplier;
+					//FinalColor = CameraAngleTan*(1.0, 1.0, 1.0);
+					//FinalColor = SurfaceDistanceToBrink*(0.1, 0.1, 0.1);
 				}
 
 				// END MOD
