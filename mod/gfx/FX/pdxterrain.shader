@@ -597,34 +597,40 @@ PixelShader =
 				//
 
 				static const float CHASM_VALUE_EPSIILON = 0.01;
-				static const float CHASM_FAKE_DEPTH     = 5.0;
+				static const float CHASM_FAKE_DEPTH     = 16.0;
+				static const float CHASM_SAMPLE_STEP    = 0.5;
 
 				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
 				{
-					float2 FromCameraXZ     = WorldSpacePos.xz - CameraPosition.xz;
-					float2 FromCameraXZNorm = normalize(FromCameraXZ); 
+					const float3 FromCamera       = WorldSpacePos - CameraPosition;
+					const float3 FromCameraNorm   = normalize(FromCamera);
+					const float3 FromCameraXZProj = float3(FromCamera.x, 0.0, FromCamera.z);
+					const float  CameraAngleCos   = dot(FromCameraNorm, normalize(FromCameraXZProj));
 
-					float DistanceToBrink = CHASM_FAKE_DEPTH;
+					const float2 SampleDistanceUnit = normalize(FromCamera.xz);
 
-					for (float SampleDistance = 0.0; SampleDistance < CHASM_FAKE_DEPTH; SampleDistance += 0.25)
+					float SurfaceDistanceToBrink = CHASM_FAKE_DEPTH;
+
+					for (float SampleDistance = 0.0; SampleDistance < CHASM_FAKE_DEPTH; SampleDistance += CHASM_SAMPLE_STEP)
 					{
-						float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*FromCameraXZNorm;
-						float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
+						const float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
+						const float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
 
-						// TODO: Optimize?
 						if (SampledChasmValue < CHASM_VALUE_EPSIILON)
 						{
-							DistanceToBrink = SampleDistance;
+							SurfaceDistanceToBrink = SampleDistance;
 							break;
 						}
 					}
 
-					//const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
+					const float FakeDepth = SurfaceDistanceToBrink / CameraAngleCos;
 
-					const float BRINK_COLOR_MULTIPLIER = 0.8;
+					//static const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
 
-					float DistanceValue        = 1.0 - saturate(DistanceToBrink / CHASM_FAKE_DEPTH);
-					float ChasmColorMultiplier = BRINK_COLOR_MULTIPLIER*DistanceValue;
+					static const float BASE_COLOR_MULTIPLIER = 0.8;
+
+					const float DistanceValue        = 1.0 - saturate(FakeDepth / CHASM_FAKE_DEPTH);
+					const float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DistanceValue;
 
 					FinalColor *= ChasmColorMultiplier;
 				}
