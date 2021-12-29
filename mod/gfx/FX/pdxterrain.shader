@@ -589,35 +589,44 @@ PixelShader =
 				// MOD(shattered-plains)
 
 				// Shift color into grayscale in proportion to chasm value (for debug)
-				FinalColor.r = lerp(FinalColor.r, FinalColor.g, ChasmValue);
-				FinalColor.b = lerp(FinalColor.b, FinalColor.g, ChasmValue);
+				//FinalColor.r = lerp(FinalColor.r, FinalColor.g, ChasmValue);
+				//FinalColor.b = lerp(FinalColor.b, FinalColor.g, ChasmValue);
 
 				//
 				// Fade to black as "depth" increases
 				//
 
 				static const float CHASM_VALUE_EPSIILON = 0.01;
-				static const float CHASM_FAKE_DEPTH     = 4.0;
+				static const float CHASM_FAKE_DEPTH     = 5.0;
 
-				if (ChasmValue > CHASM_VALUE_EPSIILON)
+				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
 				{
-					float DistanceToBrink = 1000.0;
+					float2 FromCameraXZ     = WorldSpacePos.xz - CameraPosition.xz;
+					float2 FromCameraXZNorm = normalize(FromCameraXZ); 
 
-					for (float DeltaCoord = 0.0; DeltaCoord < CHASM_FAKE_DEPTH; DeltaCoord += 0.25)
+					float DistanceToBrink = CHASM_FAKE_DEPTH;
+
+					for (float SampleDistance = 0.0; SampleDistance < CHASM_FAKE_DEPTH; SampleDistance += 0.25)
 					{
-						float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + (0.0, -DeltaCoord);
+						float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*FromCameraXZNorm;
 						float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
 
 						// TODO: Optimize?
 						if (SampledChasmValue < CHASM_VALUE_EPSIILON)
 						{
-							DistanceToBrink = DeltaCoord;
+							DistanceToBrink = SampleDistance;
 							break;
 						}
 					}
 
-					float DebugDistanceValue = 1.0 - saturate(DistanceToBrink / CHASM_FAKE_DEPTH);
-					FinalColor = (DebugDistanceValue, DebugDistanceValue, DebugDistanceValue);
+					//const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
+
+					const float BRINK_COLOR_MULTIPLIER = 0.8;
+
+					float DistanceValue        = 1.0 - saturate(DistanceToBrink / CHASM_FAKE_DEPTH);
+					float ChasmColorMultiplier = BRINK_COLOR_MULTIPLIER*DistanceValue;
+
+					FinalColor *= ChasmColorMultiplier;
 				}
 
 				// END MOD
