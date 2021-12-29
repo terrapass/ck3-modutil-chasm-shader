@@ -12,6 +12,9 @@ Includes = {
 	"bordercolor.fxh"
 	"lowspec.fxh"
 	"dynamic_masks.fxh"
+	# MOD(shattered-plains)
+	"wok_chasm.fxh"
+	# END MOD
 }
 
 VertexStruct VS_OUTPUT_PDX_TERRAIN
@@ -511,14 +514,28 @@ PixelShader =
 		[[
 			PDX_MAIN
 			{
-				clip( vec2(1.0) - Input.WorldSpacePos.xz * WorldSpaceToTerrain0To1 );
+				float3 WorldSpacePos = Input.WorldSpacePos;
+
+				clip( vec2(1.0) - WorldSpacePos.xz * WorldSpaceToTerrain0To1 );
 
 				float3 DetailDiffuse;
 				float3 DetailNormal;
 				float4 DetailMaterial;
-				CalculateDetails( Input.WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
+				CalculateDetails( WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
 
-				float2 ColorMapCoords = Input.WorldSpacePos.xz * WorldSpaceToTerrain0To1;
+				// MOD(shattered-plains)
+				float ChasmValue = DetailMaterial.r;
+
+				//float2 WoKChasmWorldSpacePosOffset = float2(0.0, -(0.5+0.5*sin(GlobalTime))) * ChasmValue;
+				float2 WoKChasmWorldSpacePosOffset = float2(0.0, 0.0);
+
+				CalculateDetails( WorldSpacePos.xz + WoKChasmWorldSpacePosOffset, DetailDiffuse, DetailNormal, DetailMaterial );
+
+				// TODO: Start with camera-appropriate fade-to-black as "depth" increases
+				//       and worry about UV/normals later.
+				// END MOD
+
+				float2 ColorMapCoords = WorldSpacePos.xz * WorldSpaceToTerrain0To1;
 #ifndef PDX_OSX
 				float3 ColorMap = PdxTex2D( ColorTexture, float2( ColorMapCoords.x, 1.0 - ColorMapCoords.y ) ).rgb;
 #else
@@ -533,7 +550,7 @@ PixelShader =
 					FlatMap = lerp( FlatMap, PdxTex2D( FlatMapTexture, float2( ColorMapCoords.x, 1.0 - ColorMapCoords.y ) ).rgb, FlatMapLerp );
 				#endif
 
-				float3 Normal = CalculateNormal( Input.WorldSpacePos.xz );
+				float3 Normal = CalculateNormal( WorldSpacePos.xz );
 
 				float3 ReorientedNormal = ReorientNormal( Normal, DetailNormal );
 
@@ -546,13 +563,13 @@ PixelShader =
 					float3 BorderColor;
 					float BorderPreLightingBlend;
 					float BorderPostLightingBlend;
-					GetBorderColorAndBlendGame( Input.WorldSpacePos.xz, FlatMap, BorderColor, BorderPreLightingBlend, BorderPostLightingBlend );
+					GetBorderColorAndBlendGame( WorldSpacePos.xz, FlatMap, BorderColor, BorderPreLightingBlend, BorderPostLightingBlend );
 
 					Diffuse = lerp( Diffuse, BorderColor, BorderPreLightingBlend );
 
 					#ifdef TERRAIN_FLAT_MAP_LERP
 						float3 FlatColor;
-						GetBorderColorAndBlendGameLerp( Input.WorldSpacePos.xz, FlatMap, FlatColor, BorderPreLightingBlend, BorderPostLightingBlend, FlatMapLerp );
+						GetBorderColorAndBlendGameLerp( WorldSpacePos.xz, FlatMap, FlatColor, BorderPreLightingBlend, BorderPostLightingBlend, FlatMapLerp );
 						
 						FlatMap = lerp( FlatMap, FlatColor, saturate( BorderPreLightingBlend + BorderPostLightingBlend ) );
 					#endif
@@ -565,27 +582,49 @@ PixelShader =
 				float ShadowTerm = CalculateShadow( Input.ShadowProj, ShadowMap );
 
 				SMaterialProperties MaterialProps = GetMaterialProperties( Diffuse, ReorientedNormal, DetailMaterial.a, DetailMaterial.g, DetailMaterial.b );
-				SLightingProperties LightingProps = GetSunLightingProperties( Input.WorldSpacePos, ShadowTerm );
+				SLightingProperties LightingProps = GetSunLightingProperties( WorldSpacePos, ShadowTerm );
 
 				float3 FinalColor = CalculateSunLighting( MaterialProps, LightingProps, EnvironmentMap );
 
 				// MOD(shattered-plains)
-				float ChasmValue      = DetailMaterial.r;
-				float MagentaStrength = FinalColor.r*FinalColor.b*(1.0 - FinalColor.g);
 
-				// Turn magenta into grayscale in proportion to chasm value and magenta strength
-				FinalColor.r = lerp(FinalColor.r, FinalColor.g, max(ChasmValue, MagentaStrength));
-				FinalColor.b = lerp(FinalColor.b, FinalColor.g, max(ChasmValue, MagentaStrength));
+				// Shift color into grayscale in proportion to chasm value (for debug)
+				FinalColor.r = lerp(FinalColor.r, FinalColor.g, ChasmValue);
+				FinalColor.b = lerp(FinalColor.b, FinalColor.g, ChasmValue);
 
-				// FIXME: Brush edges still remain magenta :(
+				//
+				// Fade to black as "depth" increases
+				//
 
-				// Fade to black as depth increases
-				FinalColor *= 1.0 - smoothstep(0.0, 15.0, -Input.WorldSpacePos.y);
+				static const float CHASM_VALUE_EPSIILON = 0.01;
+				static const float CHASM_FAKE_DEPTH     = 4.0;
+
+				if (ChasmValue > CHASM_VALUE_EPSIILON)
+				{
+					float DistanceToBrink = 1000.0;
+
+					for (float DeltaCoord = 0.0; DeltaCoord < CHASM_FAKE_DEPTH; DeltaCoord += 0.25)
+					{
+						float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + (0.0, -DeltaCoord);
+						float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
+
+						// TODO: Optimize?
+						if (SampledChasmValue < CHASM_VALUE_EPSIILON)
+						{
+							DistanceToBrink = DeltaCoord;
+							break;
+						}
+					}
+
+					float DebugDistanceValue = 1.0 - saturate(DistanceToBrink / CHASM_FAKE_DEPTH);
+					FinalColor = (DebugDistanceValue, DebugDistanceValue, DebugDistanceValue);
+				}
+
 				// END MOD
 
 				#ifndef UNDERWATER
-					FinalColor = ApplyFogOfWar( FinalColor, Input.WorldSpacePos, FogOfWarAlpha );
-					FinalColor = ApplyDistanceFog( FinalColor, Input.WorldSpacePos );
+					FinalColor = ApplyFogOfWar( FinalColor, WorldSpacePos, FogOfWarAlpha );
+					FinalColor = ApplyDistanceFog( FinalColor, WorldSpacePos );
 				#endif
 
 				#ifdef TERRAIN_COLOR_OVERLAY
@@ -602,11 +641,11 @@ PixelShader =
 
 				float Alpha = 1.0;
 				#ifdef UNDERWATER
-					Alpha = CompressWorldSpace( Input.WorldSpacePos );
+					Alpha = CompressWorldSpace( WorldSpacePos );
 				#endif
 
 				#ifdef TERRAIN_DEBUG
-					TerrainDebug( FinalColor, Input.WorldSpacePos );
+					TerrainDebug( FinalColor, WorldSpacePos );
 				#endif
 
 				DebugReturn( FinalColor, MaterialProps, LightingProps, EnvironmentMap );
