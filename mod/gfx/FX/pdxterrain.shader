@@ -596,11 +596,13 @@ PixelShader =
 				// Fade to black as "depth" increases
 				//
 
-				static const float CHASM_VALUE_EPSIILON = 0.001;
-				static const float CHASM_MAX_FAKE_DEPTH = 8.0;
-				static const float CHASM_SAMPLE_RANGE   = 16.0;
-				static const float CHASM_SAMPLE_STEP    = 0.25;
+				static const float CHASM_VALUE_EPSIILON   = 0.001;
+				static const float CHASM_MAX_FAKE_DEPTH   = 8.0;
+				static const float CHASM_SAMPLE_RANGE     = 16.0;
+				static const float CHASM_SAMPLE_STEP      = 0.25;
+				//static const float CHASM_SAMPLE_PRECISION = 0.125;
 
+				//[branch]
 				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
 				{
 					const float3 FromCamera       = WorldSpacePos - CameraPosition;
@@ -626,6 +628,19 @@ PixelShader =
 							break;
 						}
 					}
+
+					// Binary search 
+					// float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
+					// while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
+					// {
+					// 	const float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
+					// 	const float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
+					// 	const float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
+
+					// 	const float StepValue     = step(CHASM_VALUE_EPSIILON, MidpointChasmValue);
+					// 	SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
+					// 	MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
+					// }
 
 					const float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
 					//const float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
