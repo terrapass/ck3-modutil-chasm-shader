@@ -592,10 +592,6 @@ PixelShader =
 				//FinalColor.r = lerp(FinalColor.r, FinalColor.g, ChasmValue);
 				//FinalColor.b = lerp(FinalColor.b, FinalColor.g, ChasmValue);
 
-				//
-				// Fade to black as "depth" increases
-				//
-
 				static const float CHASM_VALUE_EPSIILON   = 0.001;
 				static const float CHASM_MAX_FAKE_DEPTH   = 8.0;
 				static const float CHASM_SAMPLE_RANGE     = 16.0;
@@ -647,16 +643,35 @@ PixelShader =
 
 					//static const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
 
+					//
+					// Fade to black as "depth" increases
+					//
+
 					static const float BASE_COLOR_MULTIPLIER = 0.8;
 
 					const float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
 					//const float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
 					const float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
 
+					//
+					// Texture mapping of the chasm walls
+					//
+
+					// TODO: The entire MOD block needs to be moved up so that we modify DetailDiffuse and DetailNormal
+					//       instead of FinalColor directly. This should allow for proper lighting (assuming corrected normals)
+					//       and would save up on double sampling work we're doing here.
+					const float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
+					const float2 DiffuseSampleOffset = 1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
+					const float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
+					CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
+
+					// DEBUG
 					//FinalColor = (FakeDepth / CHASM_MAX_FAKE_DEPTH)*(1.0, 1.0, 1.0);
-					FinalColor *= ChasmColorMultiplier;
 					//FinalColor = CameraAngleTan*(1.0, 1.0, 1.0);
 					//FinalColor = SurfaceDistanceToBrink*(0.1, 0.1, 0.1);
+					// END DEBUG
+
+					FinalColor = DetailDiffuse*ChasmColorMultiplier;
 				}
 
 				// END MOD
