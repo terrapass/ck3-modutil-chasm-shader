@@ -598,7 +598,7 @@ PixelShader =
 
 				static const float CHASM_VALUE_EPSIILON = 0.001;
 				static const float CHASM_MAX_FAKE_DEPTH = 8.0;
-				static const float CHASM_SAMPLE_RANGE   = 8.0;
+				static const float CHASM_SAMPLE_RANGE   = 16.0;
 				static const float CHASM_SAMPLE_STEP    = 0.25;
 
 				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
