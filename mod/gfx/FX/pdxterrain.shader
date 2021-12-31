@@ -524,12 +524,8 @@ PixelShader =
 				CalculateDetails( WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
 
 				// MOD(shattered-plains)
-				float ChasmValue = DetailMaterial.r;
-
-				//float2 WoKChasmWorldSpacePosOffset = float2(0.0, -(0.5+0.5*sin(GlobalTime))) * ChasmValue;
-				float2 WoKChasmWorldSpacePosOffset = float2(0.0, 0.0);
-
-				CalculateDetails( WorldSpacePos.xz + WoKChasmWorldSpacePosOffset, DetailDiffuse, DetailNormal, DetailMaterial );
+				//float ChasmValue = DetailMaterial.r;
+				float ChasmValue = WoKSampleChasmValue(WorldSpacePos.xz);
 
 				// TODO: Start with camera-appropriate fade-to-black as "depth" increases
 				//       and worry about UV/normals later.

@@ -26,7 +26,7 @@ PixelShader
 
 			const float2 Offset = float2(r*cos(phi), r*sin(phi));
 
-			CalculateDetails( Center + Offset, IgnoredDetailDiffuse, IgnoredDetailNormal, DetailMaterial );
+			CalculateDetails( Center - Offset, IgnoredDetailDiffuse, IgnoredDetailNormal, DetailMaterial );
 
 			return DetailMaterial.r;
 		}
