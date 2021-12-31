@@ -46,7 +46,7 @@ PixelShader
 
 			// Polar coords
 			const float r   = length(ToSymmetryCenter);
-			const float phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x);
+			const float phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x) + PI;
 
 			return WoKSampleChasmValuePolar(SYMMETRY_CENTER, SYMMETRY_RANGE, r, phi);
 		}
