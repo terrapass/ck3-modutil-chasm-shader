@@ -29,8 +29,12 @@ PixelShader
 
 			float4 DetailMaterial;
 
-			const float  SymmetryPhi = lerp(mod(phi, PI_BY_4), phi, step(SymmetryRange, r));
-			const float2 Offset      = float2(r*cos(SymmetryPhi), r*sin(SymmetryPhi));
+			const float RemainderPhi = mod(phi, PI_BY_4);
+			const float SymmetryPhi  = lerp(RemainderPhi, PI_BY_4 - RemainderPhi, step(PI_BY_4, mod(phi, 2*PI_BY_4)));
+
+			const float CorrectedPhi = lerp(SymmetryPhi, phi, step(SymmetryRange, r));
+
+			const float2 Offset = float2(r*cos(CorrectedPhi), r*sin(CorrectedPhi));
 
 			CalculateDetails( Center - Offset, IgnoredDetailDiffuse, IgnoredDetailNormal, DetailMaterial );
 
