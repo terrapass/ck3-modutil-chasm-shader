@@ -17,14 +17,20 @@ PixelShader
 {
 	Code
 	[[
-		float WoKSampleChasmValuePolar(float2 Center, float r, float phi)
+		static const float2 SYMMETRY_CENTER = float2(2250.0, 1050.0);
+		static const float  SYMMETRY_RANGE  = 120.0;
+
+		float WoKSampleChasmValuePolar(float2 Center, float SymmetryRange, float r, float phi)
 		{
+			static const float PI_BY_4 = PI/4;
+
 			float3 IgnoredDetailDiffuse;
 			float3 IgnoredDetailNormal;
 
 			float4 DetailMaterial;
 
-			const float2 Offset = float2(r*cos(phi), r*sin(phi));
+			const float  SymmetryPhi = lerp(mod(phi, PI_BY_4), phi, step(SymmetryRange, r));
+			const float2 Offset      = float2(r*cos(SymmetryPhi), r*sin(SymmetryPhi));
 
 			CalculateDetails( Center - Offset, IgnoredDetailDiffuse, IgnoredDetailNormal, DetailMaterial );
 
@@ -36,15 +42,13 @@ PixelShader
 			// TODO: Currently this does a lot of extra work.
 			//       Optimize by rewriting from scratch to just obtain the red channel from map properties texture.
 
-			static const float2 SYMMETRY_CENTER = float2(2250.0, 1050.0);
-
 			const float2 ToSymmetryCenter = SYMMETRY_CENTER - WorldSpacePosXZ;
 
 			// Polar coords
 			const float r   = length(ToSymmetryCenter);
 			const float phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x);
 
-			return WoKSampleChasmValuePolar(SYMMETRY_CENTER, r, phi);
+			return WoKSampleChasmValuePolar(SYMMETRY_CENTER, SYMMETRY_RANGE, r, phi);
 		}
 	]]
 }
