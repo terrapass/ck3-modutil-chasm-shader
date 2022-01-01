@@ -33,25 +33,25 @@ PixelShader
 
 		float WoKSampleRedPropsChannelPolar(float2 Center, float R, float Phi)
 		{
-			const float2 Offset = float2(R*cos(Phi), R*sin(Phi));
+			float2 Offset = float2(R*cos(Phi), R*sin(Phi));
 
 			return WoKSampleRedPropsChannelCartesian(Center - Offset);
 		}
 
 		float WoKSampleChasmValueSymmetricalImpl(float2 SymmetryCenter, float SymmetryRange, float2 WorldSpacePosXZ)
 		{
-			static const float PI_BY_4 = PI/4.0;
+			float PI_BY_4 = PI/4.0;
 
-			const float2 ToSymmetryCenter = SymmetryCenter - WorldSpacePosXZ;
+			float2 ToSymmetryCenter = SymmetryCenter - WorldSpacePosXZ;
 
 			// Polar coords
-			const float R   = length(ToSymmetryCenter);
-			const float Phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x) + 2*PI;
+			float R   = length(ToSymmetryCenter);
+			float Phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x) + 2*PI;
 
-			const float SymmetryPhi         = mod(Phi, PI_BY_4);
-			const float SymmetryMirroredPhi = lerp(SymmetryPhi, PI_BY_4 - SymmetryPhi, step(PI_BY_4, mod(Phi, 2*PI_BY_4)));
+			float SymmetryPhi         = mod(Phi, PI_BY_4);
+			float SymmetryMirroredPhi = lerp(SymmetryPhi, PI_BY_4 - SymmetryPhi, step(PI_BY_4, mod(Phi, 2*PI_BY_4)));
 
-			const float SelectedPhi = lerp(SymmetryMirroredPhi, Phi, step(SymmetryRange, R));
+			float SelectedPhi = lerp(SymmetryMirroredPhi, Phi, step(SymmetryRange, R));
 
 			return WoKSampleRedPropsChannelPolar(SymmetryCenter, R, SelectedPhi);
 		}
@@ -70,9 +70,9 @@ PixelShader
 
 		void WoKDrawChasmSymmetryGuides(float2 WorldSpacePosXZ, inout float3 PixelColor)
 		{
-			const float2 ToSymmetryCenter = WOK_CHASM_SYMMETRY_CENTER - WorldSpacePosXZ;
-			const float  R   = length(ToSymmetryCenter);
-			const float  Phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x);
+			float2 ToSymmetryCenter = WOK_CHASM_SYMMETRY_CENTER - WorldSpacePosXZ;
+			float  R   = length(ToSymmetryCenter);
+			float  Phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x);
 
 			if (R < 5.0 || (R > WOK_CHASM_SYMMETRY_RANGE && R < WOK_CHASM_SYMMETRY_RANGE + 1.5) ||
 				((Phi > PI/4 && Phi < PI/4 + 0.01) || (Phi > 0.0 && Phi < 0.0 + 0.01)) && R < WOK_CHASM_SYMMETRY_RANGE)

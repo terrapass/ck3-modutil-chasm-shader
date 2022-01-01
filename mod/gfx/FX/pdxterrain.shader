@@ -597,22 +597,22 @@ PixelShader =
 				//[branch]
 				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
 				{
-					const float3 FromCamera       = WorldSpacePos - CameraPosition;
-					const float3 FromCameraNorm   = normalize(FromCamera);
-					const float3 FromCameraXZ     = float3(FromCamera.x, 0.0, FromCamera.z);
-					const float3 FromCameraXZNorm = normalize(FromCameraXZ);
-					const float  CameraAngleSin   = length(cross(FromCameraNorm, FromCameraXZNorm));
-					const float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
-					const float  CameraAngleTan   = CameraAngleSin/CameraAngleCos;
+					float3 FromCamera       = WorldSpacePos - CameraPosition;
+					float3 FromCameraNorm   = normalize(FromCamera);
+					float3 FromCameraXZ     = float3(FromCamera.x, 0.0, FromCamera.z);
+					float3 FromCameraXZNorm = normalize(FromCameraXZ);
+					float  CameraAngleSin   = length(cross(FromCameraNorm, FromCameraXZNorm));
+					float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
+					float  CameraAngleTan   = CameraAngleSin/CameraAngleCos;
 
-					const float2 SampleDistanceUnit = normalize(FromCamera.xz);
+					float2 SampleDistanceUnit = normalize(FromCamera.xz);
 
 					float SurfaceDistanceToBrink = CHASM_SAMPLE_RANGE;
 
 					for (float SampleDistance = 0.0; SampleDistance < CHASM_SAMPLE_RANGE; SampleDistance += CHASM_SAMPLE_STEP)
 					{
-						const float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
-						const float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
+						float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
+						float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
 
 						if (SampledChasmValue < CHASM_VALUE_EPSIILON)
 						{
@@ -625,17 +625,17 @@ PixelShader =
 					// float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
 					// while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
 					// {
-					// 	const float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
-					// 	const float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
-					// 	const float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
+					// 	float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
+					// 	float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
+					// 	float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
 
-					// 	const float StepValue     = step(CHASM_VALUE_EPSIILON, MidpointChasmValue);
+					// 	float StepValue           = step(CHASM_VALUE_EPSIILON, MidpointChasmValue);
 					// 	SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
 					// 	MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
 					// }
 
-					const float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
-					//const float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
+					float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
+					//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
 
 					//static const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
 
@@ -645,9 +645,9 @@ PixelShader =
 
 					static const float BASE_COLOR_MULTIPLIER = 0.8;
 
-					const float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
-					//const float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
-					const float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
+					float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
+					//float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
+					float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
 
 					//
 					// Texture mapping of the chasm walls
@@ -656,9 +656,9 @@ PixelShader =
 					// TODO: The entire MOD block needs to be moved up so that we modify DetailDiffuse and DetailNormal
 					//       instead of FinalColor directly. This should allow for proper lighting (assuming corrected normals)
 					//       and would save up on double sampling work we're doing here.
-					const float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
-					const float2 DiffuseSampleOffset = 1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
-					const float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
+					float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
+					float2 DiffuseSampleOffset = 1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
+					float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
 					CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
 
 					// DEBUG
@@ -823,8 +823,8 @@ PixelShader =
 				#endif
 
 				// FIXME: Temp
-				float GrayscaleValue = saturate(0.33*FinalColor.r + 0.33*FinalColor.g + 0.33*FinalColor.b);
-				FinalColor = (GrayscaleValue, GrayscaleValue, GrayscaleValue);
+				//float GrayscaleValue = saturate(0.33*FinalColor.r + 0.33*FinalColor.g + 0.33*FinalColor.b);
+				//FinalColor = (GrayscaleValue, GrayscaleValue, GrayscaleValue);
 				// END FIXME
 
 				//DebugReturn( FinalColor, lightingProperties, ShadowTerm );
