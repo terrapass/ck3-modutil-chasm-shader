@@ -671,15 +671,7 @@ PixelShader =
 				}
 
 				// DEBUG
-				const float2 ToSymmetryCenter = SYMMETRY_CENTER - WorldSpacePos.xz;
-				const float  r   = length(ToSymmetryCenter);
-				const float  phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x);
-
-				if (r < 5.0 || (r > SYMMETRY_RANGE && r < SYMMETRY_RANGE + 1.5) ||
-					((phi > PI/4 && phi < PI/4 + 0.01) || (phi > 0.0 && phi < 0.0 + 0.01)) && r < SYMMETRY_RANGE)
-				{
-					FinalColor = float3(1.0, 1.0, 1.0);
-				}
+				WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, FinalColor);
 				// END DEBUG
 
 				// END MOD
