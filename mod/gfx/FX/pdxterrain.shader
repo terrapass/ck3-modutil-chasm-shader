@@ -657,7 +657,7 @@ PixelShader =
 					//       instead of FinalColor directly. This should allow for proper lighting (assuming corrected normals)
 					//       and would save up on double sampling work we're doing here.
 					float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
-					float2 DiffuseSampleOffset = 1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
+					float2 DiffuseSampleOffset = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
 					float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
 					CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
 
