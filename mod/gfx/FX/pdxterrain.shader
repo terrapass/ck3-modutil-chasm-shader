@@ -592,7 +592,7 @@ PixelShader =
 				static const float CHASM_MAX_FAKE_DEPTH   = 8.0;
 				static const float CHASM_SAMPLE_RANGE     = 16.0;
 				static const float CHASM_SAMPLE_STEP      = 0.25;
-				//static const float CHASM_SAMPLE_PRECISION = 0.125;
+				static const float CHASM_SAMPLE_PRECISION = 0.125;
 
 				//[branch]
 				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
@@ -621,18 +621,21 @@ PixelShader =
 						}
 					}
 
-					// Binary search 
-					// float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
-					// while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
-					// {
-					// 	float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
-					// 	float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
-					// 	float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
+					// Binary search to reach CHASM_SAMPLE_PRECISION for distance to brink
+					// (doesn't work on DirectX currently - gradient operation in a variable-iteration loop)
+					#ifndef PDX_DIRECTX_11
+					float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
+					while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
+					{
+						float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
+						float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
+						float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
 
-					// 	float StepValue           = step(CHASM_VALUE_EPSIILON, MidpointChasmValue);
-					// 	SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
-					// 	MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
-					// }
+						float StepValue           = step(CHASM_VALUE_EPSIILON, MidpointChasmValue);
+						SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
+						MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
+					}
+					#endif
 
 					float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
 					//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
