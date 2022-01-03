@@ -19,6 +19,8 @@ PixelShader
 		static const float CHASM_SAMPLE_STEP      = 0.25;
 		static const float CHASM_SAMPLE_PRECISION = 0.125;
 
+		static const float3 CHASM_BOTTOM_COLOR = float3(0.0, 0.0, 0.0);
+
 		static const float2 CHASM_SYMMETRY_CENTER = float2(2250.0, 1050.0);
 		static const float  CHASM_SYMMETRY_RANGE  = 120.0;
 
@@ -179,10 +181,9 @@ PixelShader
 				float2 DiffuseSampleOffset = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
 				float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
 				CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
+			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorMultiplier);
+		}
 
-				//FinalColor = DetailDiffuse*ChasmColorMultiplier;
-				DetailDiffuse *= ChasmColorMultiplier;
-			}
 
 			#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 			WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, DetailDiffuse);
