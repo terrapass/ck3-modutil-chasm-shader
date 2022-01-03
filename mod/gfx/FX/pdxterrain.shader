@@ -524,7 +524,7 @@ PixelShader =
 				CalculateDetails( WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
 
 				// MOD(shattered-plains)
-				WoKTryApplyChasmEffect(WorldSpacePos, DetailDiffuse, DetailNormal, DetailMaterial);
+				//WoKTryApplyChasmEffect(WorldSpacePos, DetailDiffuse, DetailNormal, DetailMaterial);
 				// END MOD
 
 				float2 ColorMapCoords = WorldSpacePos.xz * WorldSpaceToTerrain0To1;
@@ -543,6 +543,10 @@ PixelShader =
 				#endif
 
 				float3 Normal = CalculateNormal( WorldSpacePos.xz );
+
+				// MOD(shattered-plains)
+				WoKTryApplyChasmEffect(WorldSpacePos, Normal, DetailDiffuse, DetailNormal, DetailMaterial);
+				// END MOD
 
 				float3 ReorientedNormal = ReorientNormal( Normal, DetailNormal );
 

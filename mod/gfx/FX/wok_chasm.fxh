@@ -99,8 +99,14 @@ PixelShader
 			}
 		}
 
+		float3 WoKDetermineChasmWallFakeNormal(float2 BrinkWorldSpacePosXZ)
+		{
+			return float3(0.0, 1.0, 0.0); // TODO
+		}
+
 		void WoKApplyChasmEffect(
 			in    float3 WorldSpacePos,
+			inout float3 BaseNormal,
 			inout float3 DetailDiffuse,
 			inout float3 DetailNormal,
 			inout float4 DetailMaterial
@@ -150,6 +156,20 @@ PixelShader
 			//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
 
 			//
+			// Texture mapping of the chasm walls
+			//
+
+			float2 BrinkOffset          = SampleDistanceUnit*SurfaceDistanceToBrink;
+			float2 BrinkWorldSpacePosXZ = WorldSpacePos.xz + BrinkOffset;
+
+			BaseNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
+
+			float2 SampleOffset           = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
+			float2 SampleWorldSpacePosXZ  = BrinkWorldSpacePosXZ + SampleOffset;
+
+			CalculateDetails(SampleWorldSpacePosXZ, DetailDiffuse, DetailNormal, DetailMaterial);
+
+			//
 			// Fade to black as "depth" increases
 			//
 
@@ -158,15 +178,6 @@ PixelShader
 			float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
 			//float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
 			float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
-
-			//
-			// Texture mapping of the chasm walls
-			//
-
-			float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
-			float2 DiffuseSampleOffset = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
-			float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
-			CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
 
 			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorMultiplier);
 		}
@@ -177,6 +188,7 @@ PixelShader
 
 		void WoKTryApplyChasmEffect(
 			in    float3 WorldSpacePos,
+			inout float3 BaseNormal,
 			inout float3 DetailDiffuse,
 			inout float3 DetailNormal,
 			inout float4 DetailMaterial
@@ -191,7 +203,7 @@ PixelShader
 				#endif // WOK_CHASM_SYMMETRY_ENABLED
 
 				if (ChasmValue > CHASM_VALUE_EPSILON) // if we are somewhere inside the chasm
-					WoKApplyChasmEffect(WorldSpacePos, DetailDiffuse, DetailNormal, DetailMaterial);
+					WoKApplyChasmEffect(WorldSpacePos, BaseNormal, DetailDiffuse, DetailNormal, DetailMaterial);
 
 				#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 					WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, DetailDiffuse);
