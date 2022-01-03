@@ -524,11 +524,7 @@ PixelShader =
 				CalculateDetails( WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
 
 				// MOD(shattered-plains)
-				//float ChasmValue = DetailMaterial.r;
-				float ChasmValue = WoKSampleChasmValue(WorldSpacePos.xz);
-
-				// TODO: Start with camera-appropriate fade-to-black as "depth" increases
-				//       and worry about UV/normals later.
+				WoKTryApplyChasmEffect(WorldSpacePos, DetailDiffuse, DetailNormal, DetailMaterial);
 				// END MOD
 
 				float2 ColorMapCoords = WorldSpacePos.xz * WorldSpaceToTerrain0To1;
@@ -553,7 +549,6 @@ PixelShader =
 				DetailDiffuse = ApplyDynamicMasksDiffuse( DetailDiffuse, ReorientedNormal, ColorMapCoords );
 
 				float3 Diffuse = GetOverlay( DetailDiffuse.rgb, ColorMap, ( 1 - DetailMaterial.r ) * COLORMAP_OVERLAY_STRENGTH );
-
 
 				#ifdef TERRAIN_COLOR_OVERLAY
 					float3 BorderColor;
@@ -588,94 +583,9 @@ PixelShader =
 				//FinalColor.r = lerp(FinalColor.r, FinalColor.g, ChasmValue);
 				//FinalColor.b = lerp(FinalColor.b, FinalColor.g, ChasmValue);
 
-				static const float CHASM_VALUE_EPSIILON   = 0.001;
-				static const float CHASM_MAX_FAKE_DEPTH   = 8.0;
-				static const float CHASM_SAMPLE_RANGE     = 16.0;
-				static const float CHASM_SAMPLE_STEP      = 0.25;
-				static const float CHASM_SAMPLE_PRECISION = 0.125;
-
-				//[branch]
-				if (ChasmValue > CHASM_VALUE_EPSIILON) // if we are somewhere inside the chasm
-				{
-					float3 FromCamera       = WorldSpacePos - CameraPosition;
-					float3 FromCameraNorm   = normalize(FromCamera);
-					float3 FromCameraXZ     = float3(FromCamera.x, 0.0, FromCamera.z);
-					float3 FromCameraXZNorm = normalize(FromCameraXZ);
-					float  CameraAngleSin   = length(cross(FromCameraNorm, FromCameraXZNorm));
-					float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
-					float  CameraAngleTan   = CameraAngleSin/CameraAngleCos;
-
-					float2 SampleDistanceUnit = normalize(FromCamera.xz);
-
-					float SurfaceDistanceToBrink = CHASM_SAMPLE_RANGE;
-
-					for (float SampleDistance = 0.0; SampleDistance < CHASM_SAMPLE_RANGE; SampleDistance += CHASM_SAMPLE_STEP)
-					{
-						float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
-						float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
-
-						if (SampledChasmValue < CHASM_VALUE_EPSIILON)
-						{
-							SurfaceDistanceToBrink = SampleDistance;
-							break;
-						}
-					}
-
-					// Binary search to reach CHASM_SAMPLE_PRECISION for distance to brink
-					// (doesn't work on DirectX currently - gradient operation in a variable-iteration loop)
-					#ifndef PDX_DIRECTX_11
-					float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
-					while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
-					{
-						float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
-						float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
-						float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
-
-						float StepValue           = step(CHASM_VALUE_EPSIILON, MidpointChasmValue);
-						SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
-						MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
-					}
-					#endif
-
-					float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
-					//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
-
-					//static const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
-
-					//
-					// Fade to black as "depth" increases
-					//
-
-					static const float BASE_COLOR_MULTIPLIER = 0.8;
-
-					float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
-					//float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
-					float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
-
-					//
-					// Texture mapping of the chasm walls
-					//
-
-					// TODO: The entire MOD block needs to be moved up so that we modify DetailDiffuse and DetailNormal
-					//       instead of FinalColor directly. This should allow for proper lighting (assuming corrected normals)
-					//       and would save up on double sampling work we're doing here.
-					float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
-					float2 DiffuseSampleOffset = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
-					float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
-					CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
-
-					// DEBUG
-					//FinalColor = (FakeDepth / CHASM_MAX_FAKE_DEPTH)*(1.0, 1.0, 1.0);
-					//FinalColor = CameraAngleTan*(1.0, 1.0, 1.0);
-					//FinalColor = SurfaceDistanceToBrink*(0.1, 0.1, 0.1);
-					// END DEBUG
-
-					FinalColor = DetailDiffuse*ChasmColorMultiplier;
-				}
-
-				// DEBUG
-				WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, FinalColor);
-				// END DEBUG
+				// MOD(shattered-plains)
+				//WoKTryApplyChasmEffect(WorldSpacePos, FinalColor, DetailNormal, DetailMaterial);
+				// END MOD
 
 				// END MOD
 
