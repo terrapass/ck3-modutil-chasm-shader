@@ -17,7 +17,7 @@ PixelShader
 		static const float CHASM_MAX_FAKE_DEPTH   = 8.0;
 		static const float CHASM_SAMPLE_RANGE     = 16.0;
 		static const float CHASM_SAMPLE_STEP      = 0.25;
-		static const float CHASM_SAMPLE_PRECISION = 0.125;
+		static const float CHASM_SAMPLE_PRECISION = 0.03125;
 
 		static const float3 CHASM_BOTTOM_COLOR = float3(0.0, 0.0, 0.0);
 
@@ -99,9 +99,52 @@ PixelShader
 			}
 		}
 
+		void WoKUpdateChasmWallFakeNormal(
+			inout float3 FakeNormal,
+			in    float2 BrinkWorldSpacePosXZ,
+			in    float  SampleDeltaX,
+			in    float  SampleDeltaZ
+		)
+		{
+			static const float3 NIL = float3(0.0, 0.0, 0.0);
+
+			FakeNormal += lerp(
+				NIL,
+				normalize(float3(sign(SampleDeltaX), 0.0, sign(SampleDeltaZ))),
+				step(
+					CHASM_VALUE_EPSILON,
+					WoKSampleChasmValue(BrinkWorldSpacePosXZ + float2(SampleDeltaX, SampleDeltaZ))
+				)
+			);
+		}
+
 		float3 WoKDetermineChasmWallFakeNormal(float2 BrinkWorldSpacePosXZ)
 		{
-			return float3(0.0, 1.0, 0.0); // TODO
+			static const float SAMPLE_DELTA_COORD = 2.0*CHASM_SAMPLE_STEP;
+
+			float3 FakeNormal = float3(0.0, 0.001, 0.0); // y is non-zero for normalize() to behave in edge cases
+
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, 0.0);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, 0.0);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, -SAMPLE_DELTA_COORD);
+
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, -SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, -SAMPLE_DELTA_COORD);
+
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, 0.5*SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, 0.5*SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, -0.5*SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, -0.5*SAMPLE_DELTA_COORD);
+
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, 0.5*SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, 0.5*SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, -0.5*SAMPLE_DELTA_COORD);
+			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, -0.5*SAMPLE_DELTA_COORD);
+
+			return normalize(FakeNormal);
 		}
 
 		void WoKApplyChasmEffect(
@@ -161,6 +204,9 @@ PixelShader
 
 			float2 BrinkOffset          = SampleDistanceUnit*SurfaceDistanceToBrink;
 			float2 BrinkWorldSpacePosXZ = WorldSpacePos.xz + BrinkOffset;
+
+			//BrinkWorldSpacePosXZ.x -= mod(BrinkWorldSpacePosXZ.x, 0.5);
+			//BrinkWorldSpacePosXZ.y -= mod(BrinkWorldSpacePosXZ.y, 0.5);
 
 			BaseNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
 
