@@ -80,9 +80,9 @@ PixelShader
 		float WoKSampleChasmValue(float2 WorldSpacePosXZ)
 		{
 			#ifdef WOK_CHASM_SYMMETRY_ENABLED
-			return WoKSampleChasmValueSymmetricalImpl(CHASM_SYMMETRY_CENTER, CHASM_SYMMETRY_RANGE, WorldSpacePosXZ);
+				return WoKSampleChasmValueSymmetricalImpl(CHASM_SYMMETRY_CENTER, CHASM_SYMMETRY_RANGE, WorldSpacePosXZ);
 			#else
-			return WoKSampleRedPropsChannelCartesian(WorldSpacePosXZ);
+				return WoKSampleRedPropsChannelCartesian(WorldSpacePosXZ);
 			#endif
 		}
 
@@ -99,49 +99,40 @@ PixelShader
 			}
 		}
 
-		//
-		// Interface
-		//
-
-		void WoKTryApplyChasmEffect(in float3 WorldSpacePos, inout float3 DetailDiffuse, inout float3 DetailNormal, inout float4 DetailMaterial)
+		void WoKApplyChasmEffect(
+			in    float3 WorldSpacePos,
+			inout float3 DetailDiffuse,
+			inout float3 DetailNormal,
+			inout float4 DetailMaterial
+		)
 		{
-			#ifdef WOK_CHASM_ENABLED
+			float3 FromCamera       = WorldSpacePos - CameraPosition;
+			float3 FromCameraNorm   = normalize(FromCamera);
+			float3 FromCameraXZ     = float3(FromCamera.x, 0.0, FromCamera.z);
+			float3 FromCameraXZNorm = normalize(FromCameraXZ);
+			float  CameraAngleSin   = length(cross(FromCameraNorm, FromCameraXZNorm));
+			float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
+			float  CameraAngleTan   = CameraAngleSin/CameraAngleCos;
 
-			#ifdef WOK_CHASM_SYMMETRY_ENABLED
-			float ChasmValue = WoKSampleChasmValue(WorldSpacePos.xz);
-			#else
-			float ChasmValue = DetailMaterial.r;
-			#endif // WOK_CHASM_SYMMETRY_ENABLED
+			float2 SampleDistanceUnit = normalize(FromCamera.xz);
 
-			if (ChasmValue > CHASM_VALUE_EPSILON) // if we are somewhere inside the chasm
+			float SurfaceDistanceToBrink = CHASM_SAMPLE_RANGE;
+
+			for (float SampleDistance = 0.0; SampleDistance < CHASM_SAMPLE_RANGE; SampleDistance += CHASM_SAMPLE_STEP)
 			{
-				float3 FromCamera       = WorldSpacePos - CameraPosition;
-				float3 FromCameraNorm   = normalize(FromCamera);
-				float3 FromCameraXZ     = float3(FromCamera.x, 0.0, FromCamera.z);
-				float3 FromCameraXZNorm = normalize(FromCameraXZ);
-				float  CameraAngleSin   = length(cross(FromCameraNorm, FromCameraXZNorm));
-				float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
-				float  CameraAngleTan   = CameraAngleSin/CameraAngleCos;
+				float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
+				float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
 
-				float2 SampleDistanceUnit = normalize(FromCamera.xz);
-
-				float SurfaceDistanceToBrink = CHASM_SAMPLE_RANGE;
-
-				for (float SampleDistance = 0.0; SampleDistance < CHASM_SAMPLE_RANGE; SampleDistance += CHASM_SAMPLE_STEP)
+				if (SampledChasmValue < CHASM_VALUE_EPSILON)
 				{
-					float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
-					float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
-
-					if (SampledChasmValue < CHASM_VALUE_EPSILON)
-					{
-						SurfaceDistanceToBrink = SampleDistance;
-						break;
-					}
+					SurfaceDistanceToBrink = SampleDistance;
+					break;
 				}
+			}
 
-				// Binary search to reach CHASM_SAMPLE_PRECISION for distance to brink
-				// (doesn't work on DirectX currently - gradient operation in a variable-iteration loop)
-				#ifndef PDX_DIRECTX_11
+			// Binary search to reach CHASM_SAMPLE_PRECISION for distance to brink
+			// (doesn't work on DirectX currently - gradient operation in a variable-iteration loop)
+			#ifndef PDX_DIRECTX_11
 				float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
 				while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
 				{
@@ -153,41 +144,58 @@ PixelShader
 					SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
 					MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
 				}
-				#endif
+			#endif
 
-				float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
-				//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
+			float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
+			//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
 
-				//static const float3 DEBUG_DISTANCE_BASE_COLOR = (171.0, 119.0, 75.0) / 255.0;
+			//
+			// Fade to black as "depth" increases
+			//
 
-				//
-				// Fade to black as "depth" increases
-				//
+			static const float BASE_COLOR_MULTIPLIER = 0.8;
 
-				static const float BASE_COLOR_MULTIPLIER = 0.8;
+			float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
+			//float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
+			float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
 
-				float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
-				//float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
-				float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
+			//
+			// Texture mapping of the chasm walls
+			//
 
-				//
-				// Texture mapping of the chasm walls
-				//
+			float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
+			float2 DiffuseSampleOffset = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
+			float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
+			CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
 
-				// TODO: The entire MOD block needs to be moved up so that we modify DetailDiffuse and DetailNormal
-				//       instead of FinalColor directly. This should allow for proper lighting (assuming corrected normals)
-				//       and would save up on double sampling work we're doing here.
-				float2 BrinkOffset         = SampleDistanceUnit*SurfaceDistanceToBrink;
-				float2 DiffuseSampleOffset = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
-				float2 DiffuseSamplePosXZ  = WorldSpacePos.xz + BrinkOffset + DiffuseSampleOffset;
-				CalculateDetails( DiffuseSamplePosXZ, DetailDiffuse, DetailNormal, DetailMaterial );
 			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorMultiplier);
 		}
 
+		//
+		// Interface
+		//
 
-			#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
-			WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, DetailDiffuse);
-			#endif // WOK_CHASM_SYMMETRY_GUIDES_ENABLED
+		void WoKTryApplyChasmEffect(
+			in    float3 WorldSpacePos,
+			inout float3 DetailDiffuse,
+			inout float3 DetailNormal,
+			inout float4 DetailMaterial
+		)
+		{
+			#ifdef WOK_CHASM_ENABLED
+
+				#ifdef WOK_CHASM_SYMMETRY_ENABLED
+					float ChasmValue = WoKSampleChasmValue(WorldSpacePos.xz);
+				#else
+					float ChasmValue = DetailMaterial.r;
+				#endif // WOK_CHASM_SYMMETRY_ENABLED
+
+				if (ChasmValue > CHASM_VALUE_EPSILON) // if we are somewhere inside the chasm
+					WoKApplyChasmEffect(WorldSpacePos, DetailDiffuse, DetailNormal, DetailMaterial);
+
+				#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
+					WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, DetailDiffuse);
+				#endif // WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 
 			#endif // WOK_CHASM_ENABLED
 		}
