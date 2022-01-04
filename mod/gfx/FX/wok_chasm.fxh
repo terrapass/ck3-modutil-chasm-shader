@@ -19,7 +19,8 @@ PixelShader
 		static const float CHASM_SAMPLE_STEP      = 0.25;
 		static const float CHASM_SAMPLE_PRECISION = 0.03125;
 
-		static const float3 CHASM_BOTTOM_COLOR = float3(0.0, 0.0, 0.0);
+		static const float3 CHASM_BOTTOM_COLOR  = float3(0.0, 0.0, 0.0);
+		static const float3 CHASM_BOTTOM_NORMAL = float3(0.0, -1.0, 0.0);
 
 		static const float2 CHASM_SYMMETRY_CENTER = float2(2250.0, 1050.0);
 		static const float  CHASM_SYMMETRY_RANGE  = 120.0;
@@ -122,7 +123,7 @@ PixelShader
 		{
 			static const float SAMPLE_DELTA_COORD = 2.0*CHASM_SAMPLE_STEP;
 
-			float3 FakeNormal = float3(0.0, 0.001, 0.0); // y is non-zero for normalize() to behave in edge cases
+			float3 FakeNormal = float3(0.0, -0.001, 0.0); // y is non-zero for normalize() to behave in edge cases
 
 			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, 0.0);
 			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, 0.0);
@@ -195,7 +196,8 @@ PixelShader
 				}
 			#endif
 
-			float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
+			float FakeDepth         = CameraAngleTan*SurfaceDistanceToBrink;
+			float RelativeFakeDepth = saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
 			//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
 
 			//
@@ -208,7 +210,9 @@ PixelShader
 			//BrinkWorldSpacePosXZ.x -= mod(BrinkWorldSpacePosXZ.x, 0.5);
 			//BrinkWorldSpacePosXZ.y -= mod(BrinkWorldSpacePosXZ.y, 0.5);
 
-			BaseNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
+			float3 WallNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
+
+			BaseNormal = lerp(WallNormal, CHASM_BOTTOM_NORMAL, RelativeFakeDepth);
 
 			float2 SampleOffset           = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
 			float2 SampleWorldSpacePosXZ  = BrinkWorldSpacePosXZ + SampleOffset;
