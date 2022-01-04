@@ -42,18 +42,72 @@ PixelShader
 
 		float WoKSampleRedPropsChannelCartesian(float2 WorldSpacePosXZ)
 		{
-			// TODO: Currently this does a lot of extra work.
-			//       Optimize by writing our own sampling function from scratch
-			//       that would just obtain the red channel from map properties texture.
+			// Based on vanilla CalculateDetailsLowSpec() but interested only in red channel of the properties texture
 
-			float3 IgnoredDetailDiffuse;
-			float3 IgnoredDetailNormal;
+			float2 DetailCoordinates = WorldSpacePosXZ * WorldSpaceToDetail;
+			float2 DetailCoordinatesScaled = DetailCoordinates * DetailTextureSize;
+			float2 DetailCoordinatesScaledFloored = floor( DetailCoordinatesScaled );
+			float2 DetailCoordinatesFrac = DetailCoordinatesScaled - DetailCoordinatesScaledFloored;
+			DetailCoordinates = DetailCoordinatesScaledFloored * DetailTexelSize + DetailTexelSize * 0.5;
 
-			float4 DetailMaterial;
+			float4 Factors = float4(
+				(1.0 - DetailCoordinatesFrac.x) * (1.0 - DetailCoordinatesFrac.y),
+				DetailCoordinatesFrac.x * (1.0 - DetailCoordinatesFrac.y),
+				(1.0 - DetailCoordinatesFrac.x) * DetailCoordinatesFrac.y,
+				DetailCoordinatesFrac.x * DetailCoordinatesFrac.y
+			);
 
-			CalculateDetails(WorldSpacePosXZ, IgnoredDetailDiffuse, IgnoredDetailNormal, DetailMaterial);
+			float4 DetailIndex = PdxTex2DLod0( DetailIndexTexture, DetailCoordinates ) * 255.0;
+			float4 DetailMask = PdxTex2DLod0( DetailMaskTexture, DetailCoordinates ) * Factors[0];
 
-			return DetailMaterial.r;
+			float2 Offsets[3];
+			Offsets[0] = float2( DetailTexelSize.x, 0.0 );
+			Offsets[1] = float2( 0.0, DetailTexelSize.y );
+			Offsets[2] = float2( DetailTexelSize.x, DetailTexelSize.y );
+
+			for ( int k = 0; k < 3; ++k )
+			{
+				float2 DetailCoordinates2 = DetailCoordinates + Offsets[k];
+
+				float4 DetailIndices = PdxTex2DLod0( DetailIndexTexture, DetailCoordinates2 ) * 255.0;
+				float4 DetailMasks = PdxTex2DLod0( DetailMaskTexture, DetailCoordinates2 ) * Factors[k+1];
+
+				for ( int i = 0; i < 4; ++i )
+				{
+					for ( int j = 0; j < 4; ++j )
+					{
+						if ( DetailIndex[j] == DetailIndices[i] )
+						{
+							DetailMask[j] += DetailMasks[i];
+						}
+					}
+				}
+			}
+
+			float2 DetailUV = CalcDetailUV( WorldSpacePosXZ );
+
+			float4 DiffuseTexture0 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[0] ) ) * smoothstep( 0.0, 0.1, DetailMask[0] );
+			float4 DiffuseTexture1 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[1] ) ) * smoothstep( 0.0, 0.1, DetailMask[1] );
+			float4 DiffuseTexture2 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[2] ) ) * smoothstep( 0.0, 0.1, DetailMask[2] );
+			float4 DiffuseTexture3 = PdxTex2DLod0( DetailTextures, float3( DetailUV, DetailIndex[3] ) ) * smoothstep( 0.0, 0.1, DetailMask[3] );
+
+			float4 BlendFactors = CalcHeightBlendFactors( float4( DiffuseTexture0.a, DiffuseTexture1.a, DiffuseTexture2.a, DiffuseTexture3.a ), DetailMask, DetailBlendRange );
+
+			float DetailMaterialR = 0.0;
+
+			for (int i = 0; i < 4; ++i)
+			{
+				float BlendFactor = BlendFactors[i];
+				if (BlendFactor > CHASM_VALUE_EPSILON)
+				{
+					float3 ArrayUV = float3( DetailUV, DetailIndex[i] );
+					float4 MaterialTexture = PdxTex2DLod0( MaterialTextures, ArrayUV );
+
+					DetailMaterialR += MaterialTexture.r * BlendFactor;
+				}
+			}
+
+			return DetailMaterialR;
 		}
 
 		float WoKSampleRedPropsChannelPolar(float2 Center, float R, float Phi)
@@ -184,20 +238,17 @@ PixelShader
 			}
 
 			// Binary search to reach CHASM_SAMPLE_PRECISION for distance to brink
-			// (doesn't work on DirectX currently - gradient operation in a variable-iteration loop)
-			#ifndef PDX_DIRECTX_11
-				float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
-				while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
-				{
-					float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
-					float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
-					float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
+			float MinSurfaceDistanceToBrink = SurfaceDistanceToBrink - CHASM_SAMPLE_STEP;
+			while (SurfaceDistanceToBrink - MinSurfaceDistanceToBrink > CHASM_SAMPLE_PRECISION)
+			{
+				float  Midpoint                = 0.5*(MinSurfaceDistanceToBrink + SurfaceDistanceToBrink);
+				float2 MidpointWorldSpacePosXZ = WorldSpacePos.xz + Midpoint*SampleDistanceUnit;
+				float  MidpointChasmValue      = WoKSampleChasmValue(MidpointWorldSpacePosXZ);
 
-					float StepValue           = step(CHASM_VALUE_EPSILON, MidpointChasmValue);
-					SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
-					MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
-				}
-			#endif
+				float StepValue           = step(CHASM_VALUE_EPSILON, MidpointChasmValue);
+				SurfaceDistanceToBrink    = lerp(SurfaceDistanceToBrink, Midpoint, 1.0 - StepValue);
+				MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
+			}
 
 			float FakeDepth         = CameraAngleTan*SurfaceDistanceToBrink;
 			float RelativeFakeDepth = saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
