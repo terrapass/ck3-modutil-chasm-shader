@@ -40,6 +40,12 @@ PixelShader
 		// Service
 		//
 
+		#ifdef PDX_DIRECTX_11
+		#define WOK_LOOP [loop]
+		#else
+		#define WOK_LOOP // GLSL has no explicit [loop]
+		#endif
+
 		float WoKSampleRedPropsChannelCartesian(float2 WorldSpacePosXZ)
 		{
 			// Based on vanilla CalculateDetailsLowSpec() but interested only in red channel of the properties texture
@@ -225,6 +231,7 @@ PixelShader
 
 			float SurfaceDistanceToBrink = CHASM_SAMPLE_RANGE;
 
+			WOK_LOOP
 			for (float SampleDistance = 0.0; SampleDistance < CHASM_SAMPLE_RANGE; SampleDistance += CHASM_SAMPLE_STEP)
 			{
 				float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
