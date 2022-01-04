@@ -17,9 +17,9 @@ PixelShader
 		static const float CHASM_MAX_FAKE_DEPTH   = 8.0;
 		static const float CHASM_SAMPLE_RANGE     = 16.0;
 		static const float CHASM_SAMPLE_STEP      = 0.25;
-		static const float CHASM_SAMPLE_PRECISION = 0.03125;
+		static const float CHASM_SAMPLE_PRECISION = 0.005;
 
-		static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
+		//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
 
 		static const float  CHASM_BRINK_COLOR_LERP_VALUE = 0.8;
 		static const float3 CHASM_BOTTOM_COLOR           = float3(0.0, 0.0, 0.0);
@@ -262,8 +262,8 @@ PixelShader
 			float2 BrinkWorldSpacePosXZ = WorldSpacePos.xz + BrinkOffset;
 
 			// Quantize to minimize "zebra" effect in favor of more vertical lines
-			BrinkWorldSpacePosXZ.x -= mod(BrinkWorldSpacePosXZ.x, CHASM_BRINK_COORD_STEP);
-			BrinkWorldSpacePosXZ.y -= mod(BrinkWorldSpacePosXZ.y, CHASM_BRINK_COORD_STEP);
+			//BrinkWorldSpacePosXZ.x -= mod(BrinkWorldSpacePosXZ.x, CHASM_BRINK_COORD_STEP);
+			//BrinkWorldSpacePosXZ.y -= mod(BrinkWorldSpacePosXZ.y, CHASM_BRINK_COORD_STEP);
 
 			float3 WallNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
 
