@@ -12,7 +12,7 @@ PixelShader
 
 		// This is intended to be defined from *LowSpec map Effects in pdxterrain.shader
 		// so that a less performance-intensive config is used for players with low graphics settings.
-		#define WOK_LOW_SPEC
+		//#define WOK_LOW_SPEC
 
 		//
 		// Config

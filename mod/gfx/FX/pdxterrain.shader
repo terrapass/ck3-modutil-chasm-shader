@@ -523,10 +523,6 @@ PixelShader =
 				float4 DetailMaterial;
 				CalculateDetails( WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
 
-				// MOD(shattered-plains)
-				//WoKTryApplyChasmEffect(WorldSpacePos, DetailDiffuse, DetailNormal, DetailMaterial);
-				// END MOD
-
 				float2 ColorMapCoords = WorldSpacePos.xz * WorldSpaceToTerrain0To1;
 #ifndef PDX_OSX
 				float3 ColorMap = PdxTex2D( ColorTexture, float2( ColorMapCoords.x, 1.0 - ColorMapCoords.y ) ).rgb;
@@ -644,7 +640,12 @@ PixelShader =
 				float3 FlatMap = Input.FlatMap;
 
 				float3 Normal = Input.Normal;
-				
+
+				// MOD(shattered-plains)
+				float3 IgnoredDetailNormal = float3(0.0, 1.0, 0.0);
+				WoKTryApplyChasmEffect(Input.WorldSpacePos, Normal, DetailDiffuse, IgnoredDetailNormal, DetailMaterial);
+				// END MOD
+
 				DetailDiffuse = ApplyDynamicMasksDiffuse( DetailDiffuse, Normal, ColorMapCoords );
 
 				float3 Diffuse = GetOverlay( DetailDiffuse.rgb, ColorMap, ( 1 - DetailMaterial.r ) * COLORMAP_OVERLAY_STRENGTH );
@@ -766,6 +767,10 @@ Effect PdxTerrainLowSpec
 	PixelShader = "PixelShaderLowSpec"
 
 	#Defines = { "PDX_HACK_ToSpecularLightDir WaterToSunDir" }
+
+	# MOD(shattered-plains)
+	Defines = { "WOK_LOW_SPEC" }
+	# END MOD
 }
 
 Effect PdxTerrainSkirt
@@ -782,6 +787,10 @@ Effect PdxTerrainLowSpecSkirt
 	PixelShader = "PixelShaderLowSpec"
 
 	#Defines = { "PDX_HACK_ToSpecularLightDir WaterToSunDir" }
+
+	# MOD(shattered-plains)
+	Defines = { "WOK_LOW_SPEC" }
+	# END MOD
 }
 
 Effect PdxTerrainFlat
