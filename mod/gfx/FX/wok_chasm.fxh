@@ -288,14 +288,16 @@ PixelShader
 			float2 BrinkWorldSpacePosXZ = WorldSpacePos.xz + BrinkOffset;
 
 			#ifdef WOK_CHASM_USE_WALL_NORMALS
-				float3 WallNormal   = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
-				float2 SampleOffset = FakeDepth*WallNormal.xz;
+				BaseNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
+
+				float2 SampleOffset = FakeDepth*BaseNormal.xz;
 			#else
-				float3 WallNormal   = BaseNormal;
+				// Since we didn't determine the normal,
+				// we don't know which direction to actually sample textures from.
+				// Instead of trying to guess we'll simply always sample in the negative Y direction,
+				// which is fine for the most common camera viewing angles players use during the game.
 				float2 SampleOffset = float2(0.0, -FakeDepth);
 			#endif
-
-			BaseNormal = normalize(lerp(WallNormal, CHASM_BOTTOM_NORMAL, RelativeFakeDepth));
 
 			float2 SampleWorldSpacePosXZ  = BrinkWorldSpacePosXZ + SampleOffset;
 
