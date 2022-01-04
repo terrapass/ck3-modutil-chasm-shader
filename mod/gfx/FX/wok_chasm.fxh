@@ -19,8 +19,9 @@ PixelShader
 		static const float CHASM_SAMPLE_STEP      = 0.25;
 		static const float CHASM_SAMPLE_PRECISION = 0.03125;
 
-		static const float3 CHASM_BOTTOM_COLOR  = float3(0.0, 0.0, 0.0);
-		static const float3 CHASM_BOTTOM_NORMAL = float3(0.0, -1.0, 0.0);
+		static const float  CHASM_BRINK_COLOR_LERP_VALUE = 0.8;
+		static const float3 CHASM_BOTTOM_COLOR           = float3(0.0, 0.0, 0.0);
+		static const float3 CHASM_BOTTOM_NORMAL          = float3(0.0, -1.0, 0.0);
 
 		static const float2 CHASM_SYMMETRY_CENTER = float2(2250.0, 1050.0);
 		static const float  CHASM_SYMMETRY_RANGE  = 120.0;
@@ -220,16 +221,14 @@ PixelShader
 			CalculateDetails(SampleWorldSpacePosXZ, DetailDiffuse, DetailNormal, DetailMaterial);
 
 			//
-			// Fade to black as "depth" increases
+			// Fade diffuse color to CHASM_BOTTOM_COLOR as "depth" increases
 			//
 
-			static const float BASE_COLOR_MULTIPLIER = 0.8;
+			float DepthBasedColorLerpValue = 1.0 - RelativeFakeDepth;
+			//float DepthBasedColorLerpValue = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
+			float ChasmColorLerpValue = CHASM_BRINK_COLOR_LERP_VALUE*DepthBasedColorLerpValue;
 
-			float DepthColorMultiplier = 1.0 - saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
-			//float DepthColorMultiplier = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
-			float ChasmColorMultiplier = BASE_COLOR_MULTIPLIER*DepthColorMultiplier;
-
-			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorMultiplier);
+			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorLerpValue);
 		}
 
 		//
