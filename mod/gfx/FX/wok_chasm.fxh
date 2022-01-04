@@ -36,6 +36,8 @@ PixelShader
 			static const float CHASM_SAMPLE_PRECISION = 0.005;
 
 			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
+
+			#define WOK_CHASM_USE_WALL_NORMALS
 		#else
 			// Higher FPS setup
 
@@ -285,27 +287,25 @@ PixelShader
 			float2 BrinkOffset          = SampleDistanceUnit*SurfaceDistanceToBrink;
 			float2 BrinkWorldSpacePosXZ = WorldSpacePos.xz + BrinkOffset;
 
-			// Quantize to minimize "zebra" effect in favor of more vertical lines
-			//BrinkWorldSpacePosXZ.x -= mod(BrinkWorldSpacePosXZ.x, CHASM_BRINK_COORD_STEP);
-			//BrinkWorldSpacePosXZ.y -= mod(BrinkWorldSpacePosXZ.y, CHASM_BRINK_COORD_STEP);
+			#ifdef WOK_CHASM_USE_WALL_NORMALS
+				float3 WallNormal   = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
+				float2 SampleOffset = FakeDepth*WallNormal.xz;
+			#else
+				float3 WallNormal   = BaseNormal;
+				float2 SampleOffset = float2(0.0, -FakeDepth);
+			#endif
 
-			float3 WallNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
+			BaseNormal = normalize(lerp(WallNormal, CHASM_BOTTOM_NORMAL, RelativeFakeDepth));
 
-			BaseNormal = lerp(WallNormal, CHASM_BOTTOM_NORMAL, RelativeFakeDepth);
-
-			float2 SampleOffset           = FakeDepth*WallNormal.xz;
 			float2 SampleWorldSpacePosXZ  = BrinkWorldSpacePosXZ + SampleOffset;
 
 			CalculateDetails(SampleWorldSpacePosXZ, DetailDiffuse, DetailNormal, DetailMaterial);
-
-			//
-			// Fade diffuse color to CHASM_BOTTOM_COLOR as "depth" increases
-			//
 
 			float DepthBasedColorLerpValue = 1.0 - RelativeFakeDepth;
 			//float DepthBasedColorLerpValue = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
 			float ChasmColorLerpValue = CHASM_BRINK_COLOR_LERP_VALUE*DepthBasedColorLerpValue;
 
+			// Fade diffuse color to CHASM_BOTTOM_COLOR as "depth" increases
 			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorLerpValue);
 		}
 
