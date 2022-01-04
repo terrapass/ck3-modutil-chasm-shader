@@ -269,7 +269,7 @@ PixelShader
 
 			BaseNormal = lerp(WallNormal, CHASM_BOTTOM_NORMAL, RelativeFakeDepth);
 
-			float2 SampleOffset           = -1.0*float2(0.0, FakeDepth); // TODO: Sample in one of 2 or 4 different directions, depending on the side of the chasm we're on
+			float2 SampleOffset           = FakeDepth*WallNormal.xz;
 			float2 SampleWorldSpacePosXZ  = BrinkWorldSpacePosXZ + SampleOffset;
 
 			CalculateDetails(SampleWorldSpacePosXZ, DetailDiffuse, DetailNormal, DetailMaterial);
