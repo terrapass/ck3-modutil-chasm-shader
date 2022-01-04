@@ -10,16 +10,13 @@ PixelShader
 		#define WOK_CHASM_SYMMETRY_ENABLED
 		#define WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 
+		// This is intended to be defined from *LowSpec map Effects in pdxterrain.shader
+		// so that a less performance-intensive config is used for players with low graphics settings.
+		#define WOK_LOW_SPEC
+
 		//
 		// Config
 		//
-
-		static const float CHASM_MAX_FAKE_DEPTH   = 8.0;
-		static const float CHASM_SAMPLE_RANGE     = 16.0;
-		static const float CHASM_SAMPLE_STEP      = 0.25;
-		static const float CHASM_SAMPLE_PRECISION = 0.005;
-
-		//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
 
 		static const float  CHASM_BRINK_COLOR_LERP_VALUE = 0.8;
 		static const float3 CHASM_BOTTOM_COLOR           = float3(0.0, 0.0, 0.0);
@@ -29,6 +26,26 @@ PixelShader
 		static const float  CHASM_SYMMETRY_RANGE  = 120.0;
 
 		static const float3 CHASM_SYMMETRY_GUIDES_COLOR = float3(1.0, 1.0, 1.0);
+
+		#ifndef WOK_LOW_SPEC
+			// Higher fidelity setup
+
+			static const float CHASM_MAX_FAKE_DEPTH   = 6.0;
+			static const float CHASM_SAMPLE_RANGE     = 9.0;
+			static const float CHASM_SAMPLE_STEP      = 0.3;
+			static const float CHASM_SAMPLE_PRECISION = 0.005;
+
+			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
+		#else
+			// Higher FPS setup
+
+			static const float CHASM_MAX_FAKE_DEPTH   = 6.0;
+			static const float CHASM_SAMPLE_RANGE     = 6.0;
+			static const float CHASM_SAMPLE_STEP      = 0.6;
+			static const float CHASM_SAMPLE_PRECISION = 0.125;
+
+			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
+		#endif // !WOK_LOW_SPEC
 
 		//
 		// Constants
