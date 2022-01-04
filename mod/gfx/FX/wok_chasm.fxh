@@ -42,9 +42,9 @@ PixelShader
 			// Higher FPS setup
 
 			static const float CHASM_MAX_FAKE_DEPTH   = 6.0;
-			static const float CHASM_SAMPLE_RANGE     = 6.0;
+			static const float CHASM_SAMPLE_RANGE     = 9.0;
 			static const float CHASM_SAMPLE_STEP      = 0.6;
-			static const float CHASM_SAMPLE_PRECISION = 0.125;
+			static const float CHASM_SAMPLE_PRECISION = 0.25;
 
 			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
 		#endif // !WOK_LOW_SPEC
