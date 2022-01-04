@@ -242,7 +242,7 @@ PixelShader
 			float3 FromCameraXZNorm = normalize(FromCameraXZ);
 			float  CameraAngleSin   = length(cross(FromCameraNorm, FromCameraXZNorm));
 			float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
-			float  CameraAngleTan   = CameraAngleSin/CameraAngleCos;
+			float  CameraAngleTan   = CameraAngleSin/max(CameraAngleCos, 0.05);
 
 			float2 SampleDistanceUnit = normalize(FromCamera.xz);
 
