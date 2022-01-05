@@ -20,7 +20,6 @@ PixelShader
 
 		static const float  CHASM_BRINK_COLOR_LERP_VALUE = 0.8;
 		static const float3 CHASM_BOTTOM_COLOR           = float3(0.0, 0.0, 0.0);
-		static const float3 CHASM_BOTTOM_NORMAL          = float3(0.0, -1.0, 0.0);
 
 		static const float2 CHASM_SYMMETRY_CENTER = float2(2250.0, 1050.0);
 		static const float  CHASM_SYMMETRY_RANGE  = 120.0;
