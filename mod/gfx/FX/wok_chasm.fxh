@@ -55,6 +55,10 @@ PixelShader
 
 		static const float CHASM_VALUE_EPSILON = 0.001;
 
+		// Fully non-specular non-metallic and rough material
+		// to remove undesired reflections and other artifacts from chasm bottom.
+		static const float4 CHASM_BOTTOM_MATERIAL = float4(0.0, 0.0, 0.0, 1.0);
+
 		//
 		// Service
 		//
@@ -309,6 +313,9 @@ PixelShader
 
 			// Fade diffuse color to CHASM_BOTTOM_COLOR as "depth" increases
 			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorLerpValue);
+
+			// Lerp material to neutral values as "depth" increases to prevent undesired reflections
+			DetailMaterial = lerp(CHASM_BOTTOM_MATERIAL, DetailMaterial, ChasmColorLerpValue);
 		}
 
 		//
