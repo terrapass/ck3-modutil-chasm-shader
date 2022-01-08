@@ -56,22 +56,16 @@ PixelShader
 
 		static const float CHASM_VALUE_EPSILON = 0.001;
 
-		// Neutral material to remove undesired reflections and other artifacts from chasm bottom.
-		static const float4 CHASM_BOTTOM_MATERIAL = float4(
-			0.0, // Chasmness
-			0.0, // Specular intensity
-			0.0, // Metalness
-			1.0  // Roughness
-		);
-
 		//
 		// Service
 		//
 
 		#ifdef PDX_DIRECTX_11
 		#define WOK_LOOP [loop]
+		#define WOK_UNROLL [unroll]
 		#else
-		#define WOK_LOOP // GLSL has no explicit [loop]
+		#define WOK_LOOP
+		#define WOK_UNROLL
 		#endif
 
 		float WoKSampleRedPropsChannelCartesian(float2 WorldSpacePosXZ)
@@ -201,7 +195,7 @@ PixelShader
 			// TODO: Optimize. We probably can get away with sampling only in the semicircle facing the camera,
 			//       since we can't see away-facing chasm walls anyhow.
 
-			[unroll]
+			WOK_UNROLL
 			for (int i = 0; i < CHASM_WALL_NORMALS_SAMPLE_COUNT; i++)
 			{
 				float  SampleAngle      = float(i)*SAMPLE_ANGLE_INCREMENT;
