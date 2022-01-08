@@ -36,7 +36,7 @@ PixelShader
 
 			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
 
-			#define WOK_CHASM_USE_WALL_NORMALS
+			static const int CHASM_WALL_NORMALS_SAMPLE_COUNT = 12;
 		#else
 			// Higher FPS setup
 
@@ -46,6 +46,8 @@ PixelShader
 			static const float CHASM_SAMPLE_PRECISION = 0.25;
 
 			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
+
+			static const int CHASM_WALL_NORMALS_SAMPLE_COUNT = 0;
 		#endif // !WOK_LOW_SPEC
 
 		//
@@ -189,52 +191,28 @@ PixelShader
 			}
 		}
 
-		void WoKUpdateChasmWallFakeNormal(
-			inout float3 FakeNormal,
-			in    float2 BrinkWorldSpacePosXZ,
-			in    float  SampleDeltaX,
-			in    float  SampleDeltaZ
-		)
+		float3 WoKDetermineChasmWallNormal(float2 BrinkWorldSpacePosXZ)
 		{
-			static const float3 NIL = float3(0.0, 0.0, 0.0);
+			static const float SAMPLE_DISTANCE          = CHASM_SAMPLE_STEP;
+			static const float SAMPLE_ANGLE_INCREMENT   = 2*PI/float(CHASM_WALL_NORMALS_SAMPLE_COUNT);
 
-			FakeNormal += lerp(
-				NIL,
-				normalize(float3(sign(SampleDeltaX), 0.0, sign(SampleDeltaZ))),
-				step(
-					CHASM_VALUE_EPSILON,
-					WoKSampleChasmValue(BrinkWorldSpacePosXZ + float2(SampleDeltaX, SampleDeltaZ))
-				)
-			);
-		}
+			float3 RawNormal = float3(0.0, -0.001, 0.0); // y is non-zero for normalize() to behave in edge cases
 
-		float3 WoKDetermineChasmWallFakeNormal(float2 BrinkWorldSpacePosXZ)
-		{
-			static const float SAMPLE_DELTA_COORD = CHASM_SAMPLE_STEP;
+			// TODO: Optimize. We probably can get away with sampling only in the semicircle facing the camera,
+			//       since we can't see away-facing chasm walls anyhow.
 
-			float3 FakeNormal = float3(0.0, -0.001, 0.0); // y is non-zero for normalize() to behave in edge cases
+			[unroll]
+			for (int i = 0; i < CHASM_WALL_NORMALS_SAMPLE_COUNT; i++)
+			{
+				float  SampleAngle      = float(i)*SAMPLE_ANGLE_INCREMENT;
+				float2 SampleDirection  = float2(cos(SampleAngle), sin(SampleAngle));
+				float2 SampleOffset     = SAMPLE_DISTANCE*SampleDirection;
+				float  SampleChasmValue = WoKSampleChasmValue(BrinkWorldSpacePosXZ + SampleOffset);
 
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, 0.0);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, 0.0);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, -SAMPLE_DELTA_COORD);
+				RawNormal += SampleChasmValue*float3(SampleDirection.x, 0.0, SampleDirection.y);
+			}
 
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, -SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, -SAMPLE_DELTA_COORD);
-
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, 0.5*SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, 0.5*SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, SAMPLE_DELTA_COORD, -0.5*SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, -SAMPLE_DELTA_COORD, -0.5*SAMPLE_DELTA_COORD);
-
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, 0.5*SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, 0.5*SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, -0.5*SAMPLE_DELTA_COORD);
-			WoKUpdateChasmWallFakeNormal(FakeNormal, BrinkWorldSpacePosXZ, 0.0, -0.5*SAMPLE_DELTA_COORD);
-
-			return normalize(FakeNormal);
+			return normalize(RawNormal);
 		}
 
 		void WoKApplyChasmEffect(
@@ -294,19 +272,19 @@ PixelShader
 			float2 BrinkOffset          = SampleDistanceUnit*SurfaceDistanceToBrink;
 			float2 BrinkWorldSpacePosXZ = WorldSpacePos.xz + BrinkOffset;
 
-			#ifdef WOK_CHASM_USE_WALL_NORMALS
-				BaseNormal = WoKDetermineChasmWallFakeNormal(BrinkWorldSpacePosXZ);
+			// Sample in the negative Y direction by default, so that texture mapping
+			// looks fine from the most common camera viewing angles players use during the game,
+			// even if we choose not to determine the actual chasm wall normal.
+			float2 SampleOffset = float2(0.0, -FakeDepth);
 
-				float2 SampleOffset = FakeDepth*BaseNormal.xz;
-			#else
-				// Since we didn't determine the normal,
-				// we don't know which direction to actually sample textures from.
-				// Instead of trying to guess we'll simply always sample in the negative Y direction,
-				// which is fine for the most common camera viewing angles players use during the game.
-				float2 SampleOffset = float2(0.0, -FakeDepth);
-			#endif
+			if (CHASM_WALL_NORMALS_SAMPLE_COUNT > 0)
+			{
+				BaseNormal = WoKDetermineChasmWallNormal(BrinkWorldSpacePosXZ);
 
-			float2 SampleWorldSpacePosXZ  = BrinkWorldSpacePosXZ + SampleOffset;
+				SampleOffset = FakeDepth*BaseNormal.xz;
+			}
+
+			float2 SampleWorldSpacePosXZ = BrinkWorldSpacePosXZ + SampleOffset;
 
 			CalculateDetails(SampleWorldSpacePosXZ, DetailDiffuse, DetailNormal, DetailMaterial);
 
