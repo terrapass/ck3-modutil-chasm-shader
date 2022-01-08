@@ -579,7 +579,7 @@ PixelShader =
 				float3 FinalColor = CalculateSunLighting( MaterialProps, LightingProps, EnvironmentMap );
 
 				// MOD(shattered-plains)
-				WoKAdjustChasmFinalColor(FinalColor, RelativeChasmDepth);
+				WoKAdjustChasmFinalColor(FinalColor, RelativeChasmDepth, WorldSpacePos.xz);
 				// END MOD
 
 				#ifndef UNDERWATER

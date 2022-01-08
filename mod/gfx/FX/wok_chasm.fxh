@@ -291,10 +291,6 @@ PixelShader
 			CalculateDetails(SampleWorldSpacePosXZ, DetailDiffuse, DetailNormal, DetailMaterial);
 
 			RelativeChasmDepth = saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
-
-			#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
-				WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, DetailDiffuse);
-			#endif // WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 		}
 
 		//
@@ -337,7 +333,7 @@ PixelShader
 			#endif // WOK_CHASM_ENABLED
 		}
 
-		void WoKAdjustChasmFinalColor(inout float3 FinalColor, in float RelativeChasmDepth)
+		void WoKAdjustChasmFinalColor(inout float3 FinalColor, in float RelativeChasmDepth, in float2 WorldSpacePosXZ)
 		{
 			#ifdef WOK_CHASM_ENABLED
 
@@ -346,6 +342,10 @@ PixelShader
 
 				// Fade color to CHASM_BOTTOM_COLOR as "depth" increases
 				FinalColor = lerp(CHASM_BOTTOM_COLOR, FinalColor, FinalColorLerpValue);
+
+				#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
+					WoKDrawChasmSymmetryGuides(WorldSpacePosXZ, FinalColor);
+				#endif // WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 
 			#endif // WOK_CHASM_ENABLED
 		}
