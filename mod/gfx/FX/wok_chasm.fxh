@@ -56,6 +56,14 @@ PixelShader
 
 		static const float CHASM_VALUE_EPSILON = 0.001;
 
+		// Neutral material to remove undesired reflections and other artifacts from chasm bottom.
+		static const float4 CHASM_BOTTOM_MATERIAL = float4(
+			0.0, // Chasmness
+			0.0, // Specular intensity
+			0.0, // Metalness
+			1.0  // Roughness
+		);
+
 		//
 		// Service
 		//
