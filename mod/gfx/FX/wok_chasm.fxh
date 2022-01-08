@@ -186,7 +186,7 @@ PixelShader
 			float  R   = length(ToSymmetryCenter);
 			float  Phi = atan2(ToSymmetryCenter.y, ToSymmetryCenter.x);
 
-			if (R < 5.0 || (R > CHASM_SYMMETRY_RANGE && R < CHASM_SYMMETRY_RANGE + 1.5) ||
+			if (R < 2.0 || (R > CHASM_SYMMETRY_RANGE && R < CHASM_SYMMETRY_RANGE + 1.0) ||
 				((Phi > PI/4 && Phi < PI/4 + 0.01) || (Phi > 0.0 && Phi < 0.0 + 0.01)) && R < CHASM_SYMMETRY_RANGE)
 			{
 				PixelColor = CHASM_SYMMETRY_GUIDES_COLOR;
