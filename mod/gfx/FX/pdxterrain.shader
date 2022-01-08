@@ -541,7 +541,8 @@ PixelShader =
 				float3 Normal = CalculateNormal( WorldSpacePos.xz );
 
 				// MOD(shattered-plains)
-				WoKTryApplyChasmEffect(WorldSpacePos, Normal, DetailDiffuse, DetailNormal, DetailMaterial);
+				float RelativeChasmDepth;
+				WoKPrepareChasmEffect(WorldSpacePos, Normal, DetailDiffuse, DetailNormal, DetailMaterial, RelativeChasmDepth);
 				// END MOD
 
 				float3 ReorientedNormal = ReorientNormal( Normal, DetailNormal );
@@ -578,15 +579,7 @@ PixelShader =
 				float3 FinalColor = CalculateSunLighting( MaterialProps, LightingProps, EnvironmentMap );
 
 				// MOD(shattered-plains)
-
-				// Shift color into grayscale in proportion to chasm value (for debug)
-				//FinalColor.r = lerp(FinalColor.r, FinalColor.g, ChasmValue);
-				//FinalColor.b = lerp(FinalColor.b, FinalColor.g, ChasmValue);
-
-				// MOD(shattered-plains)
-				//WoKTryApplyChasmEffect(WorldSpacePos, FinalColor, DetailNormal, DetailMaterial);
-				// END MOD
-
+				WoKAdjustChasmFinalColor(FinalColor, RelativeChasmDepth);
 				// END MOD
 
 				#ifndef UNDERWATER

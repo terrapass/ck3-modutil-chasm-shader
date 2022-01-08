@@ -217,12 +217,13 @@ PixelShader
 			return normalize(RawNormal);
 		}
 
-		void WoKApplyChasmEffect(
+		void WoKPrepareChasmEffectImpl(
 			in    float3 WorldSpacePos,
 			inout float3 BaseNormal,
 			inout float3 DetailDiffuse,
 			inout float3 DetailNormal,
-			inout float4 DetailMaterial
+			inout float4 DetailMaterial,
+			out   float  RelativeChasmDepth
 		)
 		{
 			float3 FromCamera       = WorldSpacePos - CameraPosition;
@@ -264,7 +265,6 @@ PixelShader
 			}
 
 			float FakeDepth         = CameraAngleTan*SurfaceDistanceToBrink;
-			float RelativeFakeDepth = saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
 			//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
 
 			//
@@ -290,27 +290,24 @@ PixelShader
 
 			CalculateDetails(SampleWorldSpacePosXZ, DetailDiffuse, DetailNormal, DetailMaterial);
 
-			float DepthBasedColorLerpValue = 1.0 - RelativeFakeDepth;
-			//float DepthBasedColorLerpValue = 1.0 - smoothstep(0.0, CHASM_MAX_FAKE_DEPTH, FakeDepth);
-			float ChasmColorLerpValue = CHASM_BRINK_COLOR_LERP_VALUE*DepthBasedColorLerpValue;
+			RelativeChasmDepth = saturate(FakeDepth / CHASM_MAX_FAKE_DEPTH);
 
-			// Fade diffuse color to CHASM_BOTTOM_COLOR as "depth" increases
-			DetailDiffuse = lerp(CHASM_BOTTOM_COLOR, DetailDiffuse, ChasmColorLerpValue);
-
-			// Lerp material to neutral values as "depth" increases to prevent undesired reflections
-			DetailMaterial = lerp(CHASM_BOTTOM_MATERIAL, DetailMaterial, ChasmColorLerpValue);
+			#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
+				WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, DetailDiffuse);
+			#endif // WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 		}
 
 		//
 		// Interface
 		//
 
-		void WoKTryApplyChasmEffect(
+		void WoKPrepareChasmEffect(
 			in    float3 WorldSpacePos,
 			inout float3 BaseNormal,
 			inout float3 DetailDiffuse,
 			inout float3 DetailNormal,
-			inout float4 DetailMaterial
+			inout float4 DetailMaterial,
+			out   float  RelativeChasmDepth
 		)
 		{
 			#ifdef WOK_CHASM_ENABLED
@@ -321,12 +318,34 @@ PixelShader
 					float ChasmValue = DetailMaterial.r;
 				#endif // WOK_CHASM_SYMMETRY_ENABLED
 
-				if (ChasmValue > CHASM_VALUE_EPSILON) // if we are somewhere inside the chasm
-					WoKApplyChasmEffect(WorldSpacePos, BaseNormal, DetailDiffuse, DetailNormal, DetailMaterial);
+				if (ChasmValue <= CHASM_VALUE_EPSILON) // if we are outside the chasm
+				{
+					RelativeChasmDepth = 0.0;
 
-				#ifdef WOK_CHASM_SYMMETRY_GUIDES_ENABLED
-					WoKDrawChasmSymmetryGuides(WorldSpacePos.xz, DetailDiffuse);
-				#endif // WOK_CHASM_SYMMETRY_GUIDES_ENABLED
+					return;
+				}
+
+				WoKPrepareChasmEffectImpl(
+					WorldSpacePos,
+					BaseNormal,
+					DetailDiffuse,
+					DetailNormal,
+					DetailMaterial,
+					RelativeChasmDepth
+				);
+
+			#endif // WOK_CHASM_ENABLED
+		}
+
+		void WoKAdjustChasmFinalColor(inout float3 FinalColor, in float RelativeChasmDepth)
+		{
+			#ifdef WOK_CHASM_ENABLED
+
+				float BaseColorLerpValue  = lerp(1.0, CHASM_BRINK_COLOR_LERP_VALUE, step(0.0, RelativeChasmDepth));
+				float FinalColorLerpValue = BaseColorLerpValue*(1.0 - RelativeChasmDepth);
+
+				// Fade color to CHASM_BOTTOM_COLOR as "depth" increases
+				FinalColor = lerp(CHASM_BOTTOM_COLOR, FinalColor, FinalColorLerpValue);
 
 			#endif // WOK_CHASM_ENABLED
 		}
