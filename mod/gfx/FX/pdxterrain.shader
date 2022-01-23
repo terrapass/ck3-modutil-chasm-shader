@@ -12,7 +12,9 @@ Includes = {
 	"bordercolor.fxh"
 	"lowspec.fxh"
 	"dynamic_masks.fxh"
+	# MOD(wok-chasm)
 	"wok_chasm.fxh"
+	# END MOD
 }
 
 VertexStruct VS_OUTPUT_PDX_TERRAIN
@@ -400,12 +402,17 @@ PixelShader =
 
 				float3 Normal = CalculateNormal( Input.WorldSpacePos.xz );
 
+				// MOD(wok-chasm)
 				float RelativeChasmDepth;
 				WoKPrepareChasmEffect( Input.WorldSpacePos, Normal, DetailDiffuse, DetailNormal, DetailMaterial, RelativeChasmDepth );
+				// END MOD
 
+				// MOD(wok-chasm)
+				//float3 ReorientedNormal = ReorientNormal( Normal, DetailNormal );
 				float3 ReorientedNormal = Normal.z > -0.999
 					? ReorientNormal( Normal, DetailNormal )
 					: Normal;
+				// END MOD
 
 				DetailDiffuse = ApplyDynamicMasksDiffuse( DetailDiffuse, ReorientedNormal, ColorMapCoords );
 
@@ -439,7 +446,9 @@ PixelShader =
 
 				float3 FinalColor = CalculateSunLighting( MaterialProps, LightingProps, EnvironmentMap );
 
+				// MOD(wok-chasm)
 				WoKAdjustChasmFinalColor( FinalColor, RelativeChasmDepth, Input.WorldSpacePos.xz );
+				// END MOD
 
 				#ifndef UNDERWATER
 					FinalColor = ApplyFogOfWar( FinalColor, Input.WorldSpacePos, FogOfWarAlpha );
@@ -493,10 +502,12 @@ PixelShader =
 
 				float3 Normal = Input.Normal;
 
+				// MOD(wok-chasm)
 				float3 IgnoredDetailNormal = float3(0.0, 1.0, 0.0);
 
 				float RelativeChasmDepth;
 				WoKPrepareChasmEffect( Input.WorldSpacePos, Normal, DetailDiffuse, IgnoredDetailNormal, DetailMaterial, RelativeChasmDepth );
+				// END MOD
 
 				DetailDiffuse = ApplyDynamicMasksDiffuse( DetailDiffuse, Normal, ColorMapCoords );
 
@@ -527,7 +538,9 @@ PixelShader =
 
 				float3 FinalColor = CalculateSunLightingLowSpec( MaterialProps, LightingProps );
 
+				// MOD(wok-chasm)
 				WoKAdjustChasmFinalColor( FinalColor, RelativeChasmDepth, Input.WorldSpacePos.xz );
+				// END MOD
 
 				#ifndef UNDERWATER
 					FinalColor = ApplyFogOfWar( FinalColor, Input.WorldSpacePos, FogOfWarAlpha );
@@ -616,7 +629,9 @@ Effect PdxTerrainLowSpec
 	PixelShader = "PixelShaderLowSpec"
 
 	#Defines = { "PDX_HACK_ToSpecularLightDir WaterToSunDir" }
+	# MOD(wok-chasm)
 	Defines = { "WOK_LOW_SPEC" }
+	# END MOD
 }
 
 Effect PdxTerrainSkirt
@@ -633,7 +648,9 @@ Effect PdxTerrainLowSpecSkirt
 	PixelShader = "PixelShaderLowSpec"
 
 	#Defines = { "PDX_HACK_ToSpecularLightDir WaterToSunDir" }
+	# MOD(wok-chasm)
 	Defines = { "WOK_LOW_SPEC" }
+	# END MOD
 }
 
 Effect PdxTerrainFlat
