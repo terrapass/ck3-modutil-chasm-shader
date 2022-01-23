@@ -18,34 +18,35 @@ PixelShader
 		// Config
 		//
 
+		// Controls how smooth the color change between flat terrain and chasm wall should be,
+		// normals notwithstanding. 1.0 means completely smooth, the closer to 0.0 the more abrupt.
 		static const float  CHASM_BRINK_COLOR_LERP_VALUE = 0.8;
-		static const float3 CHASM_BOTTOM_COLOR           = float3(0.0, 0.0, 0.0);
 
-		static const float2 CHASM_SYMMETRY_CENTER = float2(2250.0, 1050.0);
-		static const float  CHASM_SYMMETRY_RANGE  = 120.0;
+		static const float3 CHASM_BOTTOM_COLOR = float3(0.0, 0.0, 0.0);
+
+		static const float2 CHASM_SYMMETRY_CENTER = float2(6945.0, 1102.0);
+		static const float  CHASM_SYMMETRY_RANGE  = 155.0;
 
 		static const float3 CHASM_SYMMETRY_GUIDES_COLOR = float3(1.0, 1.0, 1.0);
+
+		static const float CHASM_WALL_NORMALS_SAMPLE_DISTANCE = 0.5;
 
 		#ifndef WOK_LOW_SPEC
 			// Higher fidelity setup
 
 			static const float CHASM_MAX_FAKE_DEPTH   = 6.0;
-			static const float CHASM_SAMPLE_RANGE     = 9.0;
+			static const float CHASM_MAX_SAMPLE_RANGE = 64.0;
 			static const float CHASM_SAMPLE_STEP      = 0.3;
 			static const float CHASM_SAMPLE_PRECISION = 0.005;
-
-			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
 
 			static const int CHASM_WALL_NORMALS_SAMPLE_COUNT = 12;
 		#else
 			// Higher FPS setup
 
 			static const float CHASM_MAX_FAKE_DEPTH   = 6.0;
-			static const float CHASM_SAMPLE_RANGE     = 9.0;
+			static const float CHASM_MAX_SAMPLE_RANGE = 16.0;
 			static const float CHASM_SAMPLE_STEP      = 0.6;
 			static const float CHASM_SAMPLE_PRECISION = 0.25;
-
-			//static const float CHASM_BRINK_COORD_STEP = 2.5*CHASM_SAMPLE_PRECISION;
 
 			static const int CHASM_WALL_NORMALS_SAMPLE_COUNT = 0;
 		#endif // !WOK_LOW_SPEC
@@ -56,24 +57,16 @@ PixelShader
 
 		static const float CHASM_VALUE_EPSILON = 0.001;
 
-		// Neutral material to remove undesired reflections and other artifacts from chasm bottom.
-		static const float4 CHASM_BOTTOM_MATERIAL = float4(
-			0.0, // Chasmness
-			0.0, // Specular intensity
-			0.0, // Metalness
-			1.0  // Roughness
-		);
-
 		//
 		// Service
 		//
 
 		#ifdef PDX_DIRECTX_11
-		#define WOK_LOOP [loop]
-		#define WOK_UNROLL [unroll]
+			#define WOK_LOOP [loop]
+			#define WOK_UNROLL [unroll]
 		#else
-		#define WOK_LOOP
-		#define WOK_UNROLL
+			#define WOK_LOOP
+			#define WOK_UNROLL
 		#endif
 
 		float WoKSampleRedPropsChannelCartesian(float2 WorldSpacePosXZ)
@@ -155,7 +148,7 @@ PixelShader
 
 		float WoKSampleChasmValueSymmetricalImpl(float2 SymmetryCenter, float SymmetryRange, float2 WorldSpacePosXZ)
 		{
-			float PI_BY_4 = PI/4.0;
+			static const float PI_BY_4 = PI/4.0;
 
 			float2 ToSymmetryCenter = SymmetryCenter - WorldSpacePosXZ;
 
@@ -195,10 +188,9 @@ PixelShader
 
 		float3 WoKDetermineChasmWallNormal(float2 BrinkWorldSpacePosXZ)
 		{
-			static const float SAMPLE_DISTANCE          = CHASM_SAMPLE_STEP;
-			static const float SAMPLE_ANGLE_INCREMENT   = 2*PI/float(CHASM_WALL_NORMALS_SAMPLE_COUNT);
+			static const float SAMPLE_ANGLE_INCREMENT = 2.0*PI/float(CHASM_WALL_NORMALS_SAMPLE_COUNT);
 
-			float3 RawNormal = float3(0.0, -0.001, 0.0); // y is non-zero for normalize() to behave in edge cases
+			float3 RawNormal = float3(0.0, 0.0, 0.0);
 
 			// TODO: Optimize. We probably can get away with sampling only in the semicircle facing the camera,
 			//       since we can't see away-facing chasm walls anyhow.
@@ -208,7 +200,7 @@ PixelShader
 			{
 				float  SampleAngle      = float(i)*SAMPLE_ANGLE_INCREMENT;
 				float2 SampleDirection  = float2(cos(SampleAngle), sin(SampleAngle));
-				float2 SampleOffset     = SAMPLE_DISTANCE*SampleDirection;
+				float2 SampleOffset     = CHASM_WALL_NORMALS_SAMPLE_DISTANCE*SampleDirection;
 				float  SampleChasmValue = WoKSampleChasmValue(BrinkWorldSpacePosXZ + SampleOffset);
 
 				RawNormal += SampleChasmValue*float3(SampleDirection.x, 0.0, SampleDirection.y);
@@ -234,12 +226,12 @@ PixelShader
 			float  CameraAngleCos   = dot(FromCameraNorm, FromCameraXZNorm);
 			float  CameraAngleTan   = CameraAngleSin/max(CameraAngleCos, 0.05);
 
-			float2 SampleDistanceUnit = normalize(FromCamera.xz);
+			float2 SampleDistanceUnit = FromCameraXZNorm.xz;
+			float  SampleRange        = min(CHASM_MAX_FAKE_DEPTH/CameraAngleTan, CHASM_MAX_SAMPLE_RANGE);
 
-			float SurfaceDistanceToBrink = CHASM_SAMPLE_RANGE;
+			float SurfaceDistanceToBrink = SampleRange;
 
-			WOK_LOOP
-			for (float SampleDistance = 0.0; SampleDistance < CHASM_SAMPLE_RANGE; SampleDistance += CHASM_SAMPLE_STEP)
+			for (float SampleDistance = 0.0; SampleDistance < SampleRange; SampleDistance += CHASM_SAMPLE_STEP)
 			{
 				float2 SampleWorldSpacePosXZ = WorldSpacePos.xz + SampleDistance*SampleDistanceUnit;
 				float  SampledChasmValue     = WoKSampleChasmValue(SampleWorldSpacePosXZ);
@@ -264,7 +256,7 @@ PixelShader
 				MinSurfaceDistanceToBrink = lerp(MinSurfaceDistanceToBrink, Midpoint, StepValue);
 			}
 
-			float FakeDepth         = CameraAngleTan*SurfaceDistanceToBrink;
+			float FakeDepth = CameraAngleTan*SurfaceDistanceToBrink;
 			//float FakeDepth = SurfaceDistanceToBrink/CameraAngleCos;
 
 			//
@@ -330,6 +322,10 @@ PixelShader
 					RelativeChasmDepth
 				);
 
+			#else
+
+				RelativeChasmDepth = 0.0;
+
 			#endif // WOK_CHASM_ENABLED
 		}
 
@@ -337,7 +333,7 @@ PixelShader
 		{
 			#ifdef WOK_CHASM_ENABLED
 
-				float BaseColorLerpValue  = lerp(1.0, CHASM_BRINK_COLOR_LERP_VALUE, step(0.0, RelativeChasmDepth));
+				float BaseColorLerpValue  = lerp(1.0, CHASM_BRINK_COLOR_LERP_VALUE, step(0.005, RelativeChasmDepth));
 				float FinalColorLerpValue = BaseColorLerpValue*(1.0 - RelativeChasmDepth);
 
 				// Fade color to CHASM_BOTTOM_COLOR as "depth" increases
