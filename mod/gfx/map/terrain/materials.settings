@@ -456,20 +456,20 @@
 		id =		"india_farmlands"
 	}
 	{
-		name=		"WoK Chasm"
-		diffuse=	"wok_chasm_01_diffuse.dds"
-		normal=		"wok_chasm_01_normal.dds"
-		material=	"wok_chasm_01_properties.dds"
-		mask=		"wok_chasm_01_mask.png"
-		id =		"wok_chasm_01"
+		name=		"WoK Chasm - Desert wavy 01"
+		diffuse=	"wok_chasm_desert_wavy_01_diffuse.dds"
+		normal=		"wok_chasm_desert_wavy_01_normal.dds"
+		material=	"wok_chasm_desert_wavy_01_properties.dds"
+		mask=		"wok_chasm_desert_wavy_01_mask.bmp"
+		id =		"wok_chasm_desert_wavy_01"
 	}
 	{
-		name=		"WoK Chasm - Desert wavy 01"
-		diffuse=	"wok_chasm_02_diffuse.dds"
-		normal=		"wok_chasm_02_normal.dds"
-		material=	"wok_chasm_02_properties.dds"
-		mask=		"wok_chasm_02_mask.png"
-		id =		"wok_chasm_02"
+		name=		"WoK Chasm - Drylands 01 cracked"
+		diffuse=	"wok_chasm_drylands_01_cracked_diffuse.dds"
+		normal=		"wok_chasm_drylands_01_cracked_normal.dds"
+		material=	"wok_chasm_drylands_01_cracked_properties.dds"
+		mask=		"wok_chasm_drylands_01_cracked_mask.bmp"
+		id =		"wok_chasm_drylands_01_cracked"
 	}
 
 }
