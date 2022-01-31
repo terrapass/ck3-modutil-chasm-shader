@@ -380,7 +380,7 @@ PixelShader =
 			{
 				clip( vec2(1.0) - Input.WorldSpacePos.xz * WorldSpaceToTerrain0To1 );
 
-				float3 DetailDiffuse;
+				float4 DetailDiffuse;
 				float3 DetailNormal;
 				float4 DetailMaterial;
 				CalculateDetails( Input.WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
@@ -414,7 +414,10 @@ PixelShader =
 					: Normal;
 				// END MOD
 
-				DetailDiffuse = ApplyDynamicMasksDiffuse( DetailDiffuse, ReorientedNormal, ColorMapCoords );
+				float SnowHighlight = 0.0f;
+				#ifndef UNDERWATER
+					DetailDiffuse.rgb = ApplyDynamicMasksDiffuse( DetailDiffuse.rgb, ReorientedNormal, ColorMapCoords );
+				#endif
 
 				float3 Diffuse = GetOverlay( DetailDiffuse.rgb, ColorMap, ( 1 - DetailMaterial.r ) * COLORMAP_OVERLAY_STRENGTH );
 
@@ -437,6 +440,7 @@ PixelShader =
 
 				#ifdef TERRAIN_COLOR_OVERLAY
 					ApplyHighlightColor( Diffuse, ColorMapCoords );
+					CompensateWhiteHighlightColor( Diffuse, ColorMapCoords, SnowHighlight );
 				#endif
 
 				float ShadowTerm = CalculateShadow( Input.ShadowProj, ShadowMap );
@@ -503,13 +507,19 @@ PixelShader =
 				float3 Normal = Input.Normal;
 
 				// MOD(wok-chasm)
+				float4 DetailDiffuseHeight = float4(DetailDiffuse, 0.0);
 				float3 IgnoredDetailNormal = float3(0.0, 1.0, 0.0);
 
 				float RelativeChasmDepth;
-				WoKPrepareChasmEffect( Input.WorldSpacePos, Normal, DetailDiffuse, IgnoredDetailNormal, DetailMaterial, RelativeChasmDepth );
+				WoKPrepareChasmEffect( Input.WorldSpacePos, Normal, DetailDiffuseHeight, IgnoredDetailNormal, DetailMaterial, RelativeChasmDepth );
+
+				DetailDiffuse = DetailDiffuseHeight.rgb;
 				// END MOD
 
-				DetailDiffuse = ApplyDynamicMasksDiffuse( DetailDiffuse, Normal, ColorMapCoords );
+				float SnowHighlight = 0.0f;
+				#ifndef UNDERWATER
+					DetailDiffuse = ApplyDynamicMasksDiffuse( DetailDiffuse, Normal, ColorMapCoords );
+				#endif
 
 				float3 Diffuse = GetOverlay( DetailDiffuse.rgb, ColorMap, ( 1 - DetailMaterial.r ) * COLORMAP_OVERLAY_STRENGTH );
 				float3 ReorientedNormal = Normal;
@@ -553,6 +563,7 @@ PixelShader =
 
 				#ifdef TERRAIN_COLOR_OVERLAY
 					ApplyHighlightColor( FinalColor.rgb, ColorMapCoords );
+					CompensateWhiteHighlightColor( FinalColor.rgb, ColorMapCoords, SnowHighlight );
 				#endif
 
 				#ifdef TERRAIN_FLAT_MAP_LERP

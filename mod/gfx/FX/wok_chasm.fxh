@@ -212,7 +212,7 @@ PixelShader
 		void WoKPrepareChasmEffectImpl(
 			in    float3 WorldSpacePos,
 			inout float3 BaseNormal,
-			inout float3 DetailDiffuse,
+			inout float4 DetailDiffuse,
 			inout float3 DetailNormal,
 			inout float4 DetailMaterial,
 			out   float  RelativeChasmDepth
@@ -292,7 +292,7 @@ PixelShader
 		void WoKPrepareChasmEffect(
 			in    float3 WorldSpacePos,
 			inout float3 BaseNormal,
-			inout float3 DetailDiffuse,
+			inout float4 DetailDiffuse,
 			inout float3 DetailNormal,
 			inout float4 DetailMaterial,
 			out   float  RelativeChasmDepth
