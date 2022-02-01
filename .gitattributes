@@ -1,2 +1,5 @@
 mod/gfx/**/*.png filter=lfs diff=lfs merge=lfs -text
 mod/gfx/**/*.dds filter=lfs diff=lfs merge=lfs -text
+docs/**/*.png filter=lfs diff=lfs merge=lfs -text
+docs/**/*.gif filter=lfs diff=lfs merge=lfs -text
+docs/**/*.pdn filter=lfs diff=lfs merge=lfs -text
