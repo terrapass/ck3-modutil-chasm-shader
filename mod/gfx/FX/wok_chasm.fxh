@@ -7,8 +7,8 @@ PixelShader
 		//
 
 		#define WOK_CHASM_ENABLED
-		#define WOK_CHASM_SYMMETRY_ENABLED
-		#define WOK_CHASM_SYMMETRY_GUIDES_ENABLED
+		//#define WOK_CHASM_SYMMETRY_ENABLED
+		//#define WOK_CHASM_SYMMETRY_GUIDES_ENABLED
 
 		// This is intended to be defined from *LowSpec map Effects in pdxterrain.shader
 		// so that a less performance-intensive config is used for players with low graphics settings.
