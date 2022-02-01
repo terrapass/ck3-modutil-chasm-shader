@@ -74,11 +74,11 @@ Alternatively, you can make your own chasm brushes - you can take `*_diffuse`, `
 
 The textures of your brush determine the look of your chasm's walls - up to the point where chasm depth exceeds its width. Chasm shader essentially "folds" the map texture along the brink, so as depth increases you'll see first the texture of your chasm brush and then the surrounding texture next to chasm.
 
-Customizing the Effect<a name="#customization"></a>
+Customizing the Effect<a name="customization"></a>
 ----------------------
 Besides using your own chasm terrain brushes, you have other means of customizing the look (and performance impact) of chasms. There are several `#define`s and constants at the top of [`wok_chasm.fxh`](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/FX/wok_chasm.fxh), which you can tweak.
 
-## Defines<a name="#customization.defines"></a>
+## Defines<a name="customization.defines"></a>
 **`WOK_CHASM_ENABLED`** - comment out with `//` to disable the chasm effect altogether - useful for debugging and checking performance impact.
 
 **`WOK_CHASM_SYMMETRY_ENABLED`** - uncomment to enable 8-sector mirrored symmetry (like on the Shattered Plains in WoK), and be able to make use of <a href="#customization.symmetry">symmetry options</a>.
@@ -87,7 +87,7 @@ Besides using your own chasm terrain brushes, you have other means of customizin
 
 **`WOK_LOW_SPEC`** - this enables less performance-intensive config for players with low graphics settings; it's defined from *LowSpec map Effects in `pdxterrain.shader` (assuming you copied corresponding changes) but you can define it manually, if you want to have a look at how chasms will look on low graphics settings.
 
-## Tweakable Constants<a name="#customization.tweakables"></a>
+## Tweakable Constants<a name="customization.tweakables"></a>
 
 Values of the following constants can be changed to tweak the look of the chasm. Where it makes sense, pictures have been added to illustrate the difference a given constant's value makes.
 
@@ -155,7 +155,7 @@ _Valid values: non-negative integers_
 
 Determines how many samples are taken to determine normal directions for chasm walls. Value of `0` means chasm wall normals are not determined at all, which leads to all chasm walls having the same flat shading - this is the behavior used by default for `WOK_LOW_SPEC` mode. The smaller the value, the noisier wall shading will look. _Higher_ values have higher performance cost.
 
-## Symmetry Options<a name="#customization.symmetry"></a>
+## Symmetry Options<a name="customization.symmetry"></a>
 
 The Way of Kings uses a symmetrical pattern for the chasms on the Shattered Plains. `wok_chasm.fxh` provides the functionality to support this symmetry, which is enabled by defining `WOK_CHASM_SYMMETRY_ENABLED`. Additionally, `WOK_CHASM_SYMMETRY_GUIDES_ENABLED` can be defined while mapping chasms to provide a visual aid showing both the range of symmetry and the primary symmetry sector, from which chasm values will be duplicated across other symmetry sectors. The screenshot below shows how this looks in the map editor with WoK map.
 
