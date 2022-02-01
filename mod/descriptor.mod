@@ -3,5 +3,5 @@ tags={
 	"Map"
 	"Graphics"
 }
-name="Shattered Plains"
+name="Chasm Terrain Shader"
 supported_version="1.4.4"
