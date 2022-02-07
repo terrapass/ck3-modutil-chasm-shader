@@ -4,4 +4,4 @@ tags={
 	"Graphics"
 }
 name="Shattered Plains"
-supported_version="1.4.4"
+supported_version="1.5.0.1"
