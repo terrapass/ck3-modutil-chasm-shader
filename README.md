@@ -6,6 +6,8 @@ _(a Crusader Kings III modding utility)_
 
 This repository contains shader code and mod integration example for the chasm terrain shader - the one used in [The Way of Kings](https://steamcommunity.com/sharedfiles/filedetails/?id=2301341163) mod to render the Shattered Plains. The effect does not create any additional 3D geometry and is based on dynamically replacing the color of selected map pixels depending on camera position to create an illusion of a chasm with vertical walls, gradually fading to black (or another color) as perceived depth increases.
 
+**The code has been updated to be compatible with CK3 version 1.5.0.1 (Fleur de Lis).**
+
 Special thanks to **Tobbzn** for commissioning this effect for WoK and providing rigorous QA and debugging assistance; to **Buckzor** for coming up with the initial idea of a chasm terrain brush backed by a pixel shader; and to **CK3 Mod Co-op** for being a truly welcoming and helpful community.
 
 Table of Contents
@@ -78,7 +80,7 @@ The textures of your brush determine the look of your chasm's walls - up to the 
 
 Customizing the Effect<a name="customization"></a>
 ----------------------
-Besides using your own chasm terrain brushes, you have other means of customizing the look (and performance impact) of chasms. There are several `#define`s and constants at the top of [`wok_chasm.fxh`](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/FX/wok_chasm.fxh), which you can tweak.
+Besides using your own chasm terrain brushes, you have other means of customizing the look (and performance impact) of chasms. While shader code comes ready to be used out of the box, there are several `#define`s and constants at the top of [`wok_chasm.fxh`](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/FX/wok_chasm.fxh), which you can tweak to achieve various visual effects or adjust performance.
 
 ## Defines<a name="customization.defines"></a>
 **`WOK_CHASM_ENABLED`** - comment out with `//` to disable the chasm effect altogether - useful for debugging and checking performance impact.
