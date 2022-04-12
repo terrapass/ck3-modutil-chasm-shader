@@ -76,6 +76,10 @@ Note that if your mod uses map dimensions different from vanilla (8192x4096), yo
 
 Alternatively, you can make your own chasm brushes - you can take `*_diffuse`, `*_normal` and `*_properties` textures from any vanilla brush or make your own, the only requirement is that you modify the properties texture in such a way that it has a non-zero red channel. The shader doesn't use exact values of the red properties channel, it only checks for non-zero, so just setting the red channel to `255` is fine.
 
+When making your own terrain brush textures or editing existing ones, keep in mind that they need to be saved as DDS files with **BC3/DXT5** format and **mip-maps**. The following screenshot illustrates proper settings to achieve that on saving a DDS in Paint.NET.
+
+![Screenshot of a Paint.NET Save Configuration dialog with BC3 (Linear, DXT5) DDS format selected and Generate Mipmaps checkbox checked](https://media.githubusercontent.com/media/terrapass/ck3-modutil-chasm-shader/master/docs/pdn_dds_save_config.png)
+
 The textures of your brush determine the look of your chasm's walls - up to the point where chasm depth exceeds its width. Chasm shader essentially "folds" the map texture along the brink, so as depth increases you'll see first the texture of your chasm brush and then the surrounding texture next to chasm.
 
 Customizing the Effect<a name="customization"></a>
