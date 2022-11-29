@@ -4,4 +4,4 @@ tags={
 	"Graphics"
 }
 name="Chasm Terrain Shader"
-supported_version="1.5.0.1"
+supported_version="1.8.0"

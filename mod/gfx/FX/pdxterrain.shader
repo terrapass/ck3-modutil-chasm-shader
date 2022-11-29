@@ -239,13 +239,13 @@ VertexShader =
 			
 			float2 ColorMapCoords = Vertex.WorldSpacePos.xz * WorldSpaceToTerrain0To1;
 
-#ifndef PDX_OSX
-			Out.ColorMap = PdxTex2DLod0( ColorTexture, float2( ColorMapCoords.x, 1.0 - ColorMapCoords.y ) ).rgb;
-#else
+#if defined( PDX_OSX ) && defined( PDX_OPENGL )
 			// We're limited to the amount of samplers we can bind at any given time on Mac, so instead
 			// we disable the usage of ColorTexture (since its effects are very subtle) and assign a
 			// default value here instead.
 			Out.ColorMap = float3( vec3( 0.5 ) );
+#else
+			Out.ColorMap = PdxTex2DLod0( ColorTexture, float2( ColorMapCoords.x, 1.0 - ColorMapCoords.y ) ).rgb;
 #endif
 
 			Out.FlatMap = float3( vec3( 0.5f ) ); // neutral overlay
@@ -386,13 +386,13 @@ PixelShader =
 				CalculateDetails( Input.WorldSpacePos.xz, DetailDiffuse, DetailNormal, DetailMaterial );
 
 				float2 ColorMapCoords = Input.WorldSpacePos.xz * WorldSpaceToTerrain0To1;
-#ifndef PDX_OSX
-				float3 ColorMap = PdxTex2D( ColorTexture, float2( ColorMapCoords.x, 1.0 - ColorMapCoords.y ) ).rgb;
-#else
+#if defined( PDX_OSX ) && defined( PDX_OPENGL )
 				// We're limited to the amount of samplers we can bind at any given time on Mac, so instead
 				// we disable the usage of ColorTexture (since its effects are very subtle) and assign a
 				// default value here instead.
 				float3 ColorMap = float3( vec3( 0.5 ) );
+#else
+				float3 ColorMap = PdxTex2D( ColorTexture, float2( ColorMapCoords.x, 1.0 - ColorMapCoords.y ) ).rgb;
 #endif
 				
 				float3 FlatMap = float3( vec3( 0.5f ) ); // neutral overlay
