@@ -61,7 +61,7 @@ PixelShader
 		// Service
 		//
 
-		#ifdef PDX_DIRECTX_11
+		#ifndef PDX_OPENGL
 			#define WOK_LOOP [loop]
 			#define WOK_UNROLL [unroll]
 		#else
