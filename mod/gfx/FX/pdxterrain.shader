@@ -13,7 +13,7 @@ Includes = {
 	"lowspec.fxh"
 	"dynamic_masks.fxh"
 	# MOD(wok-chasm)
-	"wok_chasm.fxh"
+	"gh_chasm.fxh"
 	# END MOD
 }
 
