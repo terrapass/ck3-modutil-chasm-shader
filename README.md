@@ -49,7 +49,7 @@ The 3 supported chasm types are as follows.
 | Rift                 | <span style="color:#FF0000">**RED**</span> (`FF0000`)   | ![Animated GIF showing a starry rift chasm](https://media.githubusercontent.com/media/terrapass/ck3-modutil-chasm-shader/master/docs/ck3_chasm_starry.gif) | Bottoms show a parallaxed background from a cubemap texture (a starry space environment by default). Background can be changed by replacing `gfx/map/environment/gh_rift_layer_0.dds`. |
 | See-through          | <span style="color:#00FF00">**GREEN**</span> (`00FF00`) | ![Animated GIF showing a see-through chasm](https://media.githubusercontent.com/media/terrapass/ck3-modutil-chasm-shader/master/docs/ck3_chasm_seethrough.gif) | Chasm bottom pixels are discarded, revealing any models placed underneath the terrain, including [the skybox](https://github.com/terrapass/ck3-modutil-skybox) if one is set up. |
 
-Note that [`GH_chasm_types.png`](https://media.githubusercontent.com/media/terrapass/ck3-modutil-chasm-shader/master/gfx/map/terrain/GH_chasm_types.png) provided by this repo has a couple of spots already marked to demonstrate all 3 types of chasms - you might want to start by filling it with a single color or otherwise modifying it for your mod.
+Note that [`GH_chasm_types.png`](https://media.githubusercontent.com/media/terrapass/ck3-modutil-chasm-shader/master/mod/gfx/map/terrain/GH_chasm_types.png) provided by this repo has a couple of spots already marked to demonstrate all 3 types of chasms - you might want to start by filling it with a single color or otherwise modifying it for your mod.
 
 Integrating into Your Mod<a name="integration"></a>
 -------------------------
