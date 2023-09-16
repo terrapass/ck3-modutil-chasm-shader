@@ -40,7 +40,7 @@ Chasm Types<a name="chasm-types"></a>
 ![Animated GIF with the camera quickly moving over several chasms of all 3 types](https://media.githubusercontent.com/media/terrapass/ck3-modutil-chasm-shader/master/docs/ck3_chasm_types_optimized.gif)
 
 Chasm shader will apply one of 3 visual effects to chasm bottoms, depending on the pixel color in `gfx/map/terrain/GH_chasm_types.png` at coordinates where a particular chasm is located.
-Note that this texture doesn't determine the actual positions or silhouettes of chasms themselves - that is entirely controlled via `gfx/map/terrain/GH_chasms.png`. This means you can, for example, fill the entire `GH_chasm_types.png` texture with a single color, if you want all of your chasms to have the same time regardless of where they are on the map.
+Note that this texture doesn't determine the actual positions or silhouettes of chasms themselves - that is entirely controlled via `gfx/map/terrain/GH_chasms.png`. This means you can, for example, fill the entire `GH_chasm_types.png` texture with a single color, if you want all of your chasms to have the same type regardless of where they are on the map.
 
 The 3 supported chasm types are as follows.
 | Chasm Type           | `GH_chasm_types.png` Pixel Color (RGB) | Example Visuals | Notes |
