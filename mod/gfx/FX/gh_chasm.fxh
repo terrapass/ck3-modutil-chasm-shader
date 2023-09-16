@@ -16,18 +16,18 @@ TextureSampler GH_RiftLayer0
 	srgb = yes
 }
 
-TextureSampler GH_RiftLayer1
-{
-	Index = 41
-	MagFilter = "Linear"
-	MinFilter = "Linear"
-	MipFilter = "Linear"
-	SampleModeU = "Clamp"
-	SampleModeV = "Clamp"
-	Type = "Cube"
-	File = "gfx/map/environment/gh_rift_layer_1.dds"
-	srgb = yes
-}
+#TextureSampler GH_RiftLayer1
+#{
+#	Index = 41
+#	MagFilter = "Linear"
+#	MinFilter = "Linear"
+#	MipFilter = "Linear"
+#	SampleModeU = "Clamp"
+#	SampleModeV = "Clamp"
+#	Type = "Cube"
+#	File = "gfx/map/environment/gh_rift_layer_1.dds"
+#	srgb = yes
+#}
 
 TextureSampler GH_ChasmTypesMap
 {
@@ -469,10 +469,10 @@ PixelShader
 				{
 					float3 FromCameraDir0 = normalize(WorldSpacePos + float3(0.0f, 0.0f, 0.0f) - CameraPosition);
 					float4 RiftLayer0     = PdxTexCube(GH_RiftLayer0, FromCameraDir0);
-					float3 FromCameraDir1 = normalize(WorldSpacePos + float3(0.0f, 1000.0f, 0.0f) - CameraPosition);
-					float4 RiftLayer1     = PdxTexCube(GH_RiftLayer1, FromCameraDir1);
+					// float3 FromCameraDir1 = normalize(WorldSpacePos + float3(0.0f, 1000.0f, 0.0f) - CameraPosition);
+					// float4 RiftLayer1     = PdxTexCube(GH_RiftLayer1, FromCameraDir1);
 
-					float3 RiftColor = RiftLayer0.rgb + RiftLayer1.rgb*RiftLayer1.a;
+					float3 RiftColor = RiftLayer0.rgb /*+ RiftLayer1.rgb*RiftLayer1.a*/;
 
 					FinalColor = lerp(FinalColor, RiftColor, smoothstep(0.8f, 1.0f, RelativeChasmDepth));
 				}
