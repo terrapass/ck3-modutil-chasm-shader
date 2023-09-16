@@ -60,7 +60,7 @@ If your mod already has some of these shader files, you'll need to manually merg
 For convenience, all the changes to vanilla files are marked with either `MOD(wok-chasm)` or `MOD(godherja)` comments in `.shader` and `.fxh` files -
 you can just search for this string and copy/replace all pieces of code surrounded by this comment.
 
-3. *(Optional.)* Copy [the blacked-out `steppe_01_properties.dds`](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/map/terrain/steppe_01_properties.dds) to your mod's `gfx/map/terrain` folder. This will prevent chasm shader in [chasm edit mode](#editing.mapeditor) from interpreting vanilla steppes as chasms (see ["Description"](#description) for more info on that).
+3. *(Optional.)* Copy [the blacked-out `steppe_01_properties.dds`](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/map/terrain/steppe_01_properties.dds) to your mod's `gfx/map/terrain` folder. This will prevent chasm shader in [chasm edit mode](#editing.mapeditor) from interpreting vanilla steppes as chasms (see ["Using CK3's Map Editor"](#editing.mapeditor) for more info on that).
 
 4. <a name="integration.brushes"></a>*(Optional.)* If you intend to use CK3's map editor to paint chasms, you'll need chasm terrain brushes. Any brush with a non-zero red properties channel will work.
 
