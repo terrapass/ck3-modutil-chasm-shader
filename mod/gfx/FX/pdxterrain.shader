@@ -404,7 +404,10 @@ PixelShader =
 
 				// MOD(wok-chasm)
 				float RelativeChasmDepth;
-				WoKPrepareChasmEffect( Input.WorldSpacePos, Normal, DetailDiffuse, DetailNormal, DetailMaterial, RelativeChasmDepth );
+				GH_PrepareChasmEffect( Input.WorldSpacePos, /*TerrainVariantIndex,*/ Normal, DetailDiffuse, DetailNormal, DetailMaterial, RelativeChasmDepth );
+
+				uint ChasmType = GH_GetChasmType(Input.WorldSpacePos.xz);
+				GH_TryDiscardChasmPixel(RelativeChasmDepth, ChasmType);
 				// END MOD
 
 				// MOD(wok-chasm)
@@ -451,7 +454,7 @@ PixelShader =
 				float3 FinalColor = CalculateSunLighting( MaterialProps, LightingProps, EnvironmentMap );
 
 				// MOD(wok-chasm)
-				WoKAdjustChasmFinalColor( FinalColor, RelativeChasmDepth, Input.WorldSpacePos.xz );
+				GH_AdjustChasmFinalColor( FinalColor, RelativeChasmDepth, Input.WorldSpacePos, ChasmType );
 				// END MOD
 
 				#ifndef UNDERWATER
@@ -511,9 +514,12 @@ PixelShader =
 				float3 IgnoredDetailNormal = float3(0.0, 1.0, 0.0);
 
 				float RelativeChasmDepth;
-				WoKPrepareChasmEffect( Input.WorldSpacePos, Normal, DetailDiffuseHeight, IgnoredDetailNormal, DetailMaterial, RelativeChasmDepth );
+				GH_PrepareChasmEffect( Input.WorldSpacePos, 0, Normal, DetailDiffuseHeight, IgnoredDetailNormal, DetailMaterial, RelativeChasmDepth );
 
 				DetailDiffuse = DetailDiffuseHeight.rgb;
+
+				uint ChasmType = GH_GetChasmType(Input.WorldSpacePos.xz);
+				GH_TryDiscardChasmPixel(RelativeChasmDepth, ChasmType);
 				// END MOD
 
 				float SnowHighlight = 0.0f;
@@ -549,7 +555,7 @@ PixelShader =
 				float3 FinalColor = CalculateSunLightingLowSpec( MaterialProps, LightingProps );
 
 				// MOD(wok-chasm)
-				WoKAdjustChasmFinalColor( FinalColor, RelativeChasmDepth, Input.WorldSpacePos.xz );
+				GH_AdjustChasmFinalColor( FinalColor, RelativeChasmDepth, Input.WorldSpacePos, ChasmType );
 				// END MOD
 
 				#ifndef UNDERWATER
@@ -641,7 +647,7 @@ Effect PdxTerrainLowSpec
 
 	#Defines = { "PDX_HACK_ToSpecularLightDir WaterToSunDir" }
 	# MOD(wok-chasm)
-	Defines = { "WOK_LOW_SPEC" }
+	Defines = { "GH_TERRAIN_LOW_SPEC" }
 	# END MOD
 }
 
@@ -660,7 +666,7 @@ Effect PdxTerrainLowSpecSkirt
 
 	#Defines = { "PDX_HACK_ToSpecularLightDir WaterToSunDir" }
 	# MOD(wok-chasm)
-	Defines = { "WOK_LOW_SPEC" }
+	Defines = { "GH_TERRAIN_LOW_SPEC" }
 	# END MOD
 }
 
