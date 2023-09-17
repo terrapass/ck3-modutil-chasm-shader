@@ -16,7 +16,7 @@ Table of Contents
 2. <a href="#chasm-types">Chasm Types</a>
 3. <a href="#integration">Integrating into Your Mod</a>
 4. <a href="#editing">Making Chasms</a>
-    * <a href="#editing.texture">Using External Graphical Editor</a>
+    * <a href="#editing.texture">Using an External Graphical Editor</a>
     * <a href="#editing.mapeditor">Using CK3's Map Editor</a>
 5. <a href="#customization">Customizing the Effect</a>
     * <a href="#customization.defines">Defines</a>
@@ -107,8 +107,8 @@ Otherwise just changing `GH_chasms.png` texture using any graphics editor is pre
 
 Regardless of which way you use to paint the chasms themselves, you'll want to edit `gfx/map/terrain/GH_chasm_types.png` as described in mark regions for different [chasm types](#chasm-types).
 
-## Using External Graphical Editor<a name="editing.texture"></a>
-The simplest way to add chasms to your map is to edit `gfx/map/terrain/GH_chasms.png` map texture directly and mark the desired chasm spots using white pixels, while leaving everything else black.
+## Using an External Graphical Editor<a name="editing.texture"></a>
+The simplest way to add chasms to your map is to edit `gfx/map/terrain/GH_chasms.png` map texture directly using any graphics editor such as GIMP or Paint.NET, and mark the desired chasm spots using white pixels, while leaving everything else black. Specific PNG format for this texture doesn't matter - a regular 32bit PNG is fine.
 
 ## Using CK3's Map Editor<a name="editing.mapeditor"></a>
 Alternatively, you do have an option to paint chasms in map editor. To do so, run it either by providing `-mapeditor` argument to CK3, or by issuing `map_editor` console command.
@@ -117,7 +117,7 @@ To see a live preview of the chasms you paint, you'll need to enable chasm edit 
 ```
 shader_debug GH_CHASM_EDIT_MODE
 ```
-This shader mode has a much higher performance impact than the default, so will not be used in-game, but in map editor it does allows you to have a preview of your chasms as you draw them.
+This shader mode has a much higher performance impact than the default, so will not be used in-game, but in map editor it does allow you to have a preview of your chasms as you draw them.
 
 In this mode `GH_chasms.png` is **ignored completely**. Instead chasms are rendered in spots on the map with non-zero red channel in the properties texture. This channel was chosen to signify "chasmness", since it's currently unused by the vanilla game (see "How to Add Terrain Textures" spoiler [here](https://forum.paradoxplaza.com/forum/threads/map-modding-map-editor-101.1170943/)). Curiously, there is a single vanilla terrain properties texture - `steppe_01_properties.dds` - which _does_ have non-zero red channel, but in my experiments it didn't seem to have any visual meaning. For chasm shader not to interpret vanilla steppes as chasms, this texture needs to have its red channel zeroed and so this repo provides [a blacked-out version](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/map/terrain/steppe_01_properties.dds) of this file.
 
