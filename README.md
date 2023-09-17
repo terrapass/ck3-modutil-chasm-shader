@@ -60,9 +60,15 @@ If your mod already has some of these shader files, you'll need to manually merg
 For convenience, all the changes to vanilla files are marked with either `MOD(wok-chasm)` or `MOD(godherja)` comments in `.shader` and `.fxh` files -
 you can just search for this string and copy/replace all pieces of code surrounded by this comment.
 
-3. *(Optional.)* Copy [the blacked-out `steppe_01_properties.dds`](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/map/terrain/steppe_01_properties.dds) to your mod's `gfx/map/terrain` folder. This will prevent chasm shader in [chasm edit mode](#editing.mapeditor) from interpreting vanilla steppes as chasms (see ["Using CK3's Map Editor"](#editing.mapeditor) for more info on that).
+2. Create your own `gfx/map/terrain/GH_chasm_types.png` and `gfx/map/terrain/GH_chasms.png` textures or copy the ones from this repo. These textures should have the same resolution as your map dimensions.
+Fully black textures are fine to begin with, see [next section](#editing) for information on how to fill them with actual data.
+Note that the versions of these textures provided by this repo already contain some example data and have vanilla map size (8192x4096).
 
-4. <a name="integration.brushes"></a>*(Optional.)* If you intend to use CK3's map editor to paint chasms, you'll need chasm terrain brushes. Any brush with a non-zero red properties channel will work.
+3. Copy the rift cubemap texture `gfx/map/environment/gh_rift_layer_0.dds` into your mod or create your own at the same path. This should be a **cubemap** DDS using `BC3/DXT5` compression, with MIP-maps.
+
+4. *(Optional.)* Copy [the blacked-out `steppe_01_properties.dds`](https://github.com/terrapass/ck3-modutil-chasm-shader/blob/master/mod/gfx/map/terrain/steppe_01_properties.dds) to your mod's `gfx/map/terrain` folder. This will prevent chasm shader in [chasm edit mode](#editing.mapeditor) from interpreting vanilla steppes as chasms (see ["Using CK3's Map Editor"](#editing.mapeditor) for more info on that).
+
+5. <a name="integration.brushes"></a>*(Optional.)* If you intend to use CK3's map editor to paint chasms, you'll need chasm terrain brushes. Any brush with a non-zero red properties channel will work.
 
 You can use the two brushes included in the repo - to do that just copy the remaining texture files from this repo's [`gfx/map/terrain`](https://github.com/terrapass/ck3-modutil-chasm-shader/tree/master/mod/gfx/map/terrain) folder and either copy the entire `materials.settings` file or merge in the last 2 brush definitions from it:
 ```
