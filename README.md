@@ -99,7 +99,7 @@ When making your own terrain brush textures or editing existing ones, keep in mi
 
 The textures of your brush determine the look of your chasm's walls, up to the point where chasm depth exceeds its width. Chasm shader essentially "folds" the map texture along the brink, so as depth increases you'll see first the texture of your chasm brush and then the surrounding texture next to chasm.
 
-Making Chasms<a name="#editing"></a>
+Making Chasms<a name="editing"></a>
 -------------
 You can use either an external graphics editor (GIMP, Paint.NET, etc.), or CK3's buit-in map editor to add chasms to your mod's map.
 Using the map editor requires more setup and is generally more fiddly, but you might decide to use it if you want to have a live preview as you paint your chasms.
