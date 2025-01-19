@@ -6,7 +6,7 @@ _(a Crusader Kings III modding utility)_
 
 This repository contains shader code and mod integration example for the chasm terrain shader - the one used in [The Way of Kings](https://steamcommunity.com/sharedfiles/filedetails/?id=2301341163) mod to render the Shattered Plains, as well as in [Godherja: The Dying World](https://steamcommunity.com/sharedfiles/filedetails/?id=2326030123) for its rifts. The effect does not create any additional 3D geometry and is based on dynamically replacing the color of selected map pixels depending on camera position to create an illusion of a chasm with vertical walls, gradually fading to black, optionally with [either discarded see-through pixels or a parallaxed cubemap background](#chasm-types) at the bottom.
 
-**The code has been updated to be compatible with CK3 version 1.10.2 (Quill).**
+**The code has been updated to be compatible with CK3 version 1.14.2.2 (Traverse).**
 
 Special thanks to **Tobbzn** for commissioning this effect for WoK and providing rigorous QA and debugging assistance; to **Buckzor** for coming up with the initial idea of a chasm terrain brush backed by a pixel shader; and to **CK3 Mod Co-op** for being a truly welcoming and helpful community.
 
